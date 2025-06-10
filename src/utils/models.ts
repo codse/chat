@@ -85,8 +85,8 @@ export const supportedModels: Record<string, ModelProvider> = {
       },
       {
         supports: ['vision', 'text'],
-        id: 'openai/gpt-4.5',
-        name: 'GPT-4.5',
+        id: 'openai/gpt-4.5-preview',
+        name: 'GPT-4.5 (Preview)',
       },
       {
         supports: ['vision', 'text'],
@@ -103,11 +103,6 @@ export const supportedModels: Record<string, ModelProvider> = {
         id: 'openai/o3-mini',
         name: 'o3-mini',
       },
-      {
-        supports: ['vision', 'text', 'reasoning'],
-        id: 'openai/o4-mini',
-        name: 'o4-mini',
-      },
     ],
   },
   anthropic: {
@@ -119,18 +114,13 @@ export const supportedModels: Record<string, ModelProvider> = {
     models: [
       {
         supports: ['vision', 'file', 'text'],
-        id: 'anthropic/claude-4-sonnet',
-        name: 'Claude 4 Sonnet',
+        id: 'anthropic/claude-opus-4',
+        name: 'Claude 4 Opus',
       },
       {
         supports: ['vision', 'file', 'text', 'reasoning'],
-        id: 'anthropic/claude-4-sonnet-reasoning',
-        name: 'Claude 4 Sonnet (Reasoning)',
-      },
-      {
-        supports: ['vision', 'file', 'text'],
-        id: 'anthropic/claude-4-opus',
-        name: 'Claude 4 Opus',
+        id: 'anthropic/claude-sonnet-4',
+        name: 'Claude 4 Sonnet',
       },
       {
         supports: ['vision', 'file', 'text'],
@@ -140,13 +130,8 @@ export const supportedModels: Record<string, ModelProvider> = {
       },
       {
         supports: ['vision', 'file', 'text', 'reasoning'],
-        id: 'anthropic/claude-3.7-sonnet-reasoning',
+        id: 'anthropic/claude-3.7-sonnet:thinking',
         name: 'Claude 3.7 Sonnet (Reasoning)',
-      },
-      {
-        supports: ['vision', 'file', 'text'],
-        id: 'anthropic/claude-3.5-sonnet',
-        name: 'Claude 3.5 Sonnet',
       },
     ],
   },
@@ -159,17 +144,18 @@ export const supportedModels: Record<string, ModelProvider> = {
     models: [
       {
         supports: ['text'],
-        id: 'meta/llama-3.3-70b',
+        id: 'meta-llama/llama-3.3-70b-instruct:free',
         name: 'Llama 3.3 70B',
+        recommended: true,
       },
       {
         supports: ['vision', 'text'],
-        id: 'meta/llama-4-scout',
+        id: 'meta-llama/llama-4-scout:free',
         name: 'Llama 4 Scout',
       },
       {
         supports: ['vision', 'text'],
-        id: 'meta/llama-4-maverick',
+        id: 'meta-llama/llama-4-maverick:free',
         name: 'Llama 4 Maverick',
       },
     ],
@@ -203,13 +189,13 @@ export const supportedModels: Record<string, ModelProvider> = {
     models: [
       {
         supports: ['text'],
-        id: 'x/grok-3',
-        name: 'Grok 3',
+        id: 'x-ai/grok-3-mini-beta',
+        name: 'Grok 3 Mini Beta',
       },
       {
         supports: ['text', 'reasoning'],
-        id: 'x/grok-3-mini',
-        name: 'Grok 3 Mini',
+        id: 'x-ai/grok-3-beta',
+        name: 'Grok 3 Beta',
         recommended: true,
       },
     ],
