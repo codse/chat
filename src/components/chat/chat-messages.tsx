@@ -73,23 +73,26 @@ export function ChatMessages({
   return (
     <div
       className={cn(
-        'h-full overflow-y-auto overflow-x-hidden flex-1 flex flex-col',
+        'h-full w-full overflow-y-auto overflow-x-hidden flex-1 flex flex-col',
         className
       )}
     >
-      <ChatContainerRoot className="max-w-[var(--breakpoint-md)] mx-auto flex-1">
-        <ChatContainerContent className="space-y-4 p-4 w-full">
-          {messages.map((message) => {
+      <ChatContainerRoot className="flex relative w-full flex-col mx-auto flex-1">
+        <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
+          {messages.map((message, index) => {
             const isAssistant = message.role === 'assistant';
             const showLoading =
               message.status === 'pending' && !message.content?.length;
+            const isLastMessage = index === messages.length - 1;
 
             return (
               <Message
                 key={message._id}
-                className={
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }
+                className={cn({
+                  'justify-end': message.role === 'user',
+                  'justify-start': message.role === 'assistant',
+                  'min-h-[calc(100dvh-125px)]': isLastMessage,
+                })}
               >
                 {isAssistant ? (
                   <div className="prose rounded-lg p-2 max-w-[85%] sm:max-w-[75%] w-fit">
@@ -131,7 +134,10 @@ export function ChatMessages({
             );
           })}
         </ChatContainerContent>
-        <ScrollButton />
+        <ScrollButton
+          variant="secondary"
+          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2"
+        />
       </ChatContainerRoot>
     </div>
   );
