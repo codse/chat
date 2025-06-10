@@ -1,0 +1,153 @@
+import {
+  SidebarGroup,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { api } from '@convex/_generated/api';
+import {
+  UseMutateFunction,
+  useMutation,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { Link, useMatch } from '@tanstack/react-router';
+import { MoreHorizontal, PencilIcon, PinIcon, TrashIcon } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '../ui/dropdown-menu';
+import { useSidebar } from '../ui/sidebar';
+import { Chat } from '@/types/chat';
+import { Id } from '@convex/_generated/dataModel';
+
+function ChatListItem({
+  chat,
+  isMobile,
+  active,
+  updateChatTitle,
+  deleteChat,
+  togglePin,
+}: {
+  chat: Chat;
+  isMobile: boolean;
+  active?: boolean;
+  updateChatTitle: UseMutateFunction<
+    null,
+    Error,
+    { chatId: Id<'chats'>; title: string },
+    unknown
+  >;
+  deleteChat: UseMutateFunction<null, Error, { chatId: Id<'chats'> }, unknown>;
+  togglePin: UseMutateFunction<null, Error, { chatId: Id<'chats'> }, unknown>;
+}) {
+  return (
+    <DropdownMenu key={chat._id}>
+      <SidebarMenuItem
+        key={chat._id}
+        className="relative group data-[state=open]:bg-accent"
+      >
+        <SidebarMenuButton asChild isActive={active}>
+          <Link
+            to={`/chat/$chatId`}
+            params={{ chatId: chat._id }}
+            className="w-full text-sm flex items-center gap-2"
+          >
+            <span className="line-clamp-1">{chat.title}</span>
+            <DropdownMenuTrigger asChild>
+              <MoreHorizontal className="ml-auto" />
+            </DropdownMenuTrigger>
+          </Link>
+        </SidebarMenuButton>
+        <DropdownMenuContent
+          side={isMobile ? 'bottom' : 'right'}
+          align={isMobile ? 'end' : 'start'}
+          className="min-w-56 rounded-lg"
+        >
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => togglePin({ chatId: chat._id })}
+          >
+            <PinIcon />
+            {chat.pinned ? 'Unpin chat' : 'Pin chat'}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() => deleteChat({ chatId: chat._id })}
+          >
+            <TrashIcon />
+            Delete chat
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onClick={() =>
+              updateChatTitle({ chatId: chat._id, title: 'Renamed chat' })
+            }
+          >
+            <PencilIcon />
+            Rename chat
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </SidebarMenuItem>
+    </DropdownMenu>
+  );
+}
+
+export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
+  const { data } = useSuspenseQuery(
+    convexQuery(api.chats.queries.listChats, {
+      mode,
+      paginationOpts: {
+        limit: 10,
+        cursor: null,
+      },
+    })
+  );
+
+  const { mutate: updateChatTitle } = useMutation({
+    mutationFn: useConvexMutation(api.chats.mutations.updateChatTitle),
+  });
+
+  const { mutate: deleteChat } = useMutation({
+    mutationFn: useConvexMutation(api.chats.mutations.deleteChat),
+  });
+
+  const { mutate: togglePin } = useMutation({
+    mutationFn: useConvexMutation(api.chats.mutations.pinChat),
+  });
+
+  const match = useMatch({
+    from: '/chat/$chatId',
+    shouldThrow: false,
+  });
+
+  const { isMobile } = useSidebar();
+  const chats = data?.chats;
+
+  if (!chats?.length) {
+    return null;
+  }
+
+  return (
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <span className="text-sm font-medium px-2 mb-0.5 text-muted-foreground">
+        {mode === 'pinned' ? 'Pinned' : 'Recent'}
+      </span>
+      <SidebarMenu>
+        {chats?.map((chat) => (
+          <ChatListItem
+            key={chat._id}
+            chat={chat}
+            isMobile={isMobile}
+            active={match?.params?.chatId === chat._id}
+            updateChatTitle={updateChatTitle}
+            deleteChat={deleteChat}
+            togglePin={togglePin}
+          />
+        ))}
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
