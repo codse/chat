@@ -1,23 +1,61 @@
-# Trello-like example using Convex DB
+# Getting Started
 
-This is a TanStack Start demo using Convex as the database.
-It is similar to the [start-trellaux](https://github.com/TanStack/router/tree/main/examples/react/start-trellaux) example but uses a cloud Convex deployment instead of an in-memory database.
+## Prerequisites
 
-To run this example:
+- Node.js 18+ 
+- pnpm 8+
 
-```sh
+## Installation
+
+1. Clone the repository
+2. Install dependencies:
+```bash
 pnpm install
+```
+
+3. Set up environment variables:
+Create a `.env.local` & `.env` file in the root directory with:
+
+```env
+# .env.local
+CONVEX_DEPLOYMENT=your_deployment_id
+CONVEX_URL=your_convex_url
+```
+
+```env
+CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+```
+
+1. In `convex` dashboard, set `CLERK_FRONTEND_API_URL` and `OPENROUTER_API_KEY` in the environment variables.
+
+2. Start the development server:
+```bash
 pnpm dev
 ```
 
-# Convex
+The application will be available at `http://localhost:3000`
 
-Convex is an open source Reactive backend made by [convex.dev](https://convex.dev/?utm_source=tanstack), a sponsor of TanStack Start.
+## Project Structure
 
-This example uses Convex with TanStack Query and TanStack Start to provide
+- `src/` - Source code
+  - `components/` - React components
+  - `routes/` - TanStack Router routes
+  - `lib/` - Utility functions
+- `convex/` - Convex backend functions and schema
 
-- Typesafe TanStack Query options factories like `convexQuery` for use with `useQuery`, `useSuspenseQuery` etc.
-- Live-updating queries: updates come in over a WebSocket instead of requiring polling
-- Automatic query invalidation: when a mutation succeeds all queries it affects update automatically
-- Selective optimistic update rollback: when a mutation succeeds only its update will be rolled back, with other optimistic updates reapplied
-- Consistent snapshot reads of database state: /messages will never return a foreign key for a /user that doesn't exist until the next fetch
+
+## Tech Stack
+
+- [TanStack Start](https://tanstack.com/start) - Framework
+- [TanStack Router](https://tanstack.com/router) - Routing
+- [TanStack Query](https://tanstack.com/query) - Data fetching
+- [Convex](https://www.convex.dev/) - Backend
+- [React](https://react.dev/) - UI library
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Lucide](https://lucide.dev/) - Icons
+- [Shadcn UI](https://ui.shadcn.com/) - UI components
+- [Prompt kit](https://www.prompt-kit.com/) - Chat UI
+- [Clerk](https://clerk.com/) - Authentication
+- [OpenRouter](https://openrouter.ai/) - AI API
+- [Vercel AI SDK](https://sdk.vercel.ai/) - AI SDK
