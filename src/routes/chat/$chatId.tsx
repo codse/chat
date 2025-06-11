@@ -43,7 +43,9 @@ function ChatPage() {
           initialMessage={initialMessage}
         />
       </Suspense>
-      <ChatInput chatId={chatId} />
+      <div className="px-4">
+        <ChatInput chatId={chatId} />
+      </div>
     </div>
   );
 }

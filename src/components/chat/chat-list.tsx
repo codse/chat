@@ -1,6 +1,7 @@
 import {
   SidebarGroup,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -44,54 +45,57 @@ function ChatListItem({
   togglePin: UseMutateFunction<null, Error, { chatId: Id<'chats'> }, unknown>;
 }) {
   return (
-    <DropdownMenu key={chat._id}>
-      <SidebarMenuItem
-        key={chat._id}
-        className="relative group data-[state=open]:bg-accent"
-      >
-        <SidebarMenuButton asChild isActive={active}>
-          <Link
-            to={`/chat/$chatId`}
-            params={{ chatId: chat._id }}
-            className="w-full text-sm flex items-center gap-2"
-          >
-            <span className="line-clamp-1">{chat.title}</span>
-            <DropdownMenuTrigger asChild>
-              <MoreHorizontal className="ml-auto" />
-            </DropdownMenuTrigger>
-          </Link>
-        </SidebarMenuButton>
-        <DropdownMenuContent
-          side={isMobile ? 'bottom' : 'right'}
-          align={isMobile ? 'end' : 'start'}
-          className="min-w-56 rounded-lg"
+    <SidebarMenuItem
+      key={chat._id}
+      className="relative group data-[state=open]:bg-accent"
+    >
+      <SidebarMenuButton asChild isActive={active}>
+        <Link
+          to={`/chat/$chatId`}
+          params={{ chatId: chat._id }}
+          className="w-full text-sm flex items-center gap-2 px-2 py-1.5"
         >
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => togglePin({ chatId: chat._id })}
-          >
-            <PinIcon />
-            {chat.pinned ? 'Unpin chat' : 'Pin chat'}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => deleteChat({ chatId: chat._id })}
-          >
-            <TrashIcon />
-            Delete chat
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() =>
-              updateChatTitle({ chatId: chat._id, title: 'Renamed chat' })
-            }
-          >
-            <PencilIcon />
-            Rename chat
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </SidebarMenuItem>
-    </DropdownMenu>
+          <span className="line-clamp-1">{chat.title}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuAction showOnHover>
+                <MoreHorizontal className="ml-auto" />
+              </SidebarMenuAction>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              side={isMobile ? 'bottom' : 'right'}
+              align={isMobile ? 'end' : 'start'}
+              className="min-w-56 rounded-lg"
+            >
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => togglePin({ chatId: chat._id })}
+              >
+                <PinIcon />
+                {chat.pinned ? 'Unpin chat' : 'Pin chat'}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => deleteChat({ chatId: chat._id })}
+              >
+                <TrashIcon />
+                Delete chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() =>
+                  updateChatTitle({ chatId: chat._id, title: 'Renamed chat' })
+                }
+              >
+                <PencilIcon />
+                Rename chat
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 

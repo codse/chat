@@ -19,6 +19,64 @@ import {
 import { ScrollButton } from '../ui/scroll-button';
 import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
+import { Message as MessageType } from '@/types/chat';
+
+function ChatMessage({
+  message,
+  isLastMessage,
+}: {
+  message: MessageType;
+  isLastMessage: boolean;
+}) {
+  const isAssistant = message.role === 'assistant';
+  const showLoading = message.status === 'pending' && !message.content?.length;
+
+  return (
+    <Message
+      key={message._id}
+      className={cn({
+        'justify-end': message.role === 'user',
+        'justify-start': message.role === 'assistant',
+        'min-h-[calc(100dvh-125px-var(--vh-offset))]': isLastMessage,
+      })}
+    >
+      {isAssistant ? (
+        <div className="prose rounded-lg p-2 max-w-[85%] sm:max-w-[75%] w-fit">
+          <MessageContent className="bg-transparent leading-normal" markdown>
+            {message.content}
+          </MessageContent>
+          {message.endReason === 'error' && (
+            <MessageContent className="bg-orange-50 text-orange-500">
+              There was an error generating the response.
+            </MessageContent>
+          )}
+          {Boolean(message.reasoning?.length) && (
+            <Reasoning defaultOpen={false} className="px-2 text-sm">
+              <ReasoningTrigger>Show reasoning</ReasoningTrigger>
+              {message?.status === 'pending' ? (
+                <ReasoningResponse text={message.reasoning as string} />
+              ) : (
+                <ReasoningContent>
+                  <Markdown>{message.reasoning as string}</Markdown>
+                </ReasoningContent>
+              )}
+            </Reasoning>
+          )}
+        </div>
+      ) : (
+        <MessageContent className="max-w-[85%] sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
+          {message.content}
+        </MessageContent>
+      )}
+      {showLoading && (
+        <Loader
+          variant={message.reasoning ? 'text-shimmer' : 'typing'}
+          text={message.reasoning ? 'Reasoning...' : ''}
+        />
+      )}
+    </Message>
+  );
+}
 
 export function ChatMessages({
   chatId,
@@ -73,66 +131,19 @@ export function ChatMessages({
   return (
     <div
       className={cn(
-        'h-full w-full overflow-y-auto overflow-x-hidden flex-1 flex flex-col',
+        'h-full w-full overflow-y-auto overflow-x-hidden flex-1 flex flex-col relative',
         className
       )}
     >
       <ChatContainerRoot className="flex relative w-full flex-col mx-auto flex-1">
         <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
-          {messages.map((message, index) => {
-            const isAssistant = message.role === 'assistant';
-            const showLoading =
-              message.status === 'pending' && !message.content?.length;
-            const isLastMessage = index === messages.length - 1;
-
-            return (
-              <Message
-                key={message._id}
-                className={cn({
-                  'justify-end': message.role === 'user',
-                  'justify-start': message.role === 'assistant',
-                  'min-h-[calc(100dvh-125px)]': isLastMessage,
-                })}
-              >
-                {isAssistant ? (
-                  <div className="prose rounded-lg p-2 max-w-[85%] sm:max-w-[75%] w-fit">
-                    <MessageContent className="bg-transparent" markdown>
-                      {message.content}
-                    </MessageContent>
-                    {message.endReason === 'error' && (
-                      <MessageContent className="bg-orange-50 text-orange-500">
-                        There was an error generating the response.
-                      </MessageContent>
-                    )}
-                    {Boolean(message.reasoning?.length) && (
-                      <Reasoning defaultOpen={false} className="px-2 text-sm">
-                        <ReasoningTrigger>Show reasoning</ReasoningTrigger>
-                        {message?.status === 'pending' ? (
-                          <ReasoningResponse
-                            text={message.reasoning as string}
-                          />
-                        ) : (
-                          <ReasoningContent>
-                            <Markdown>{message.reasoning as string}</Markdown>
-                          </ReasoningContent>
-                        )}
-                      </Reasoning>
-                    )}
-                  </div>
-                ) : (
-                  <MessageContent className="max-w-[85%] sm:max-w-[75%] w-fit bg-primary/30">
-                    {message.content}
-                  </MessageContent>
-                )}
-                {showLoading && (
-                  <Loader
-                    variant={message.reasoning ? 'text-shimmer' : 'typing'}
-                    text={message.reasoning ? 'Reasoning...' : ''}
-                  />
-                )}
-              </Message>
-            );
-          })}
+          {messages.map((message, index) => (
+            <ChatMessage
+              key={message._id}
+              message={message}
+              isLastMessage={index === messages.length - 1}
+            />
+          ))}
         </ChatContainerContent>
         <ScrollButton
           variant="secondary"

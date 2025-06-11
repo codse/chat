@@ -84,7 +84,7 @@ export function ChatInput({
       onValueChange={setInput}
       isLoading={isPending}
       onSubmit={handleSubmit}
-      className="w-full max-w-(--breakpoint-md) mx-auto border-b-0 self-center-safe"
+      className="w-full bg-transparent max-w-(--breakpoint-md) mx-auto border-b-0 self-center-safe"
     >
       {files.length > 0 && (
         <div className="flex flex-wrap gap-2 pb-2">
@@ -106,7 +106,7 @@ export function ChatInput({
         </div>
       )}
 
-      <PromptInputTextarea autoFocus placeholder="Ask me anything..." />
+      <PromptInputTextarea autoFocus placeholder="Type your message here..." />
 
       <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
         <div className="flex items-center gap-2 px-2">
@@ -117,7 +117,7 @@ export function ChatInput({
                 setModelId(value);
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="border-none text-xs text-muted-foreground font-semibold px-1 shadow-none">
                 <SelectValue placeholder="Select a model" />
                 <SelectContent>
                   {modelsList.map((model) => (
