@@ -1,5 +1,5 @@
 import { api, internal } from '@convex/_generated/api';
-import { Id } from '@convex/_generated/dataModel';
+import { Doc, Id } from '@convex/_generated/dataModel';
 import { internalMutation, mutation } from '@convex/_generated/server';
 import { IndexRange } from 'convex/server';
 import { v } from 'convex/values';
@@ -10,18 +10,14 @@ export const addMessage = internalMutation({
     ...Message,
     chatId: v.optional(v.id('chats')),
   },
-  handler: async (
-    ctx,
-    args
-  ): Promise<{
-    messageId: Id<'messages'>;
-    chatId: Id<'chats'> | undefined;
-  }> => {
+  handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     if (!args.content?.trim().length && args.role === 'user') {
       throw new Error('Content is required');
     }
 
     let chatId = args.chatId;
+    let currentModel = args.model;
+    let lastModel: string | undefined;
     if (!chatId) {
       chatId = await ctx.runMutation(api.chats.mutations.createChat, {
         title: args.content.slice(0, 50),
@@ -32,27 +28,41 @@ export const addMessage = internalMutation({
       if (!chat) {
         throw new Error('Chat not found');
       }
+      lastModel = chat.model;
+      if (!currentModel) {
+        currentModel = lastModel;
+      }
     }
 
     if (!chatId) {
       throw new Error('Chat not found');
     }
 
-    if (!args.model) {
+    if (!currentModel) {
       throw new Error(
         'Model is required to generate a response for a user message.'
       );
     }
 
-    const messageId = await ctx.db.insert('messages', {
+    const message = {
       chatId,
       role: args.role,
       content: args.content,
       reasoning: args.reasoning,
       attachments: args.attachments,
-      model: args.model,
+      model: currentModel,
       status: args.status,
-    });
+    };
+
+    if (lastModel !== currentModel) {
+      // Update chat to track last model
+      await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
+        chatId,
+        model: currentModel,
+      });
+    }
+
+    const messageId = await ctx.db.insert('messages', message);
 
     if (args.role === 'user') {
       // Get the last 20 messages for the chat
@@ -85,11 +95,11 @@ export const addMessage = internalMutation({
           role: 'user' | 'assistant';
           content: string;
         }[],
-        model: args.model,
+        model: currentModel,
       });
     }
 
-    return { messageId, chatId: chatId as Id<'chats'> };
+    return ctx.db.get(messageId);
   },
 });
 
@@ -114,13 +124,7 @@ export const sendMessage = mutation({
     chatId: v.optional(Message.chatId),
     model: Message.model,
   },
-  handler: async (
-    ctx,
-    args
-  ): Promise<{
-    messageId: Id<'messages'>;
-    chatId: Id<'chats'> | undefined;
-  }> => {
+  handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
     const userId = user?._id;
 
@@ -135,7 +139,7 @@ export const sendMessage = mutation({
     return await ctx.runMutation(internal.messages.mutations.addMessage, {
       chatId: args.chatId,
       role: 'user',
-      content: args.content,
+      content: String(args.content).trim(),
       attachments: args.attachments,
       model: args.model,
       status: 'completed',

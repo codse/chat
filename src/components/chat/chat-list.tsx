@@ -12,7 +12,7 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
-import { Link, useMatch } from '@tanstack/react-router';
+import { Link, useMatch, useNavigate } from '@tanstack/react-router';
 import { MoreHorizontal, PencilIcon, PinIcon, TrashIcon } from 'lucide-react';
 import {
   DropdownMenu,
@@ -53,6 +53,7 @@ function ChatListItem({
         <Link
           to={`/chat/$chatId`}
           params={{ chatId: chat._id }}
+          state={{ chat }}
           className="w-full text-sm flex items-center gap-2 px-2 py-1.5"
         >
           <span className="line-clamp-1">{chat.title}</span>
@@ -104,11 +105,13 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
     convexQuery(api.chats.queries.listChats, {
       mode,
       paginationOpts: {
-        limit: 10,
+        limit: 100,
         cursor: null,
       },
     })
   );
+
+  const navigate = useNavigate();
 
   const { mutate: updateChatTitle } = useMutation({
     mutationFn: useConvexMutation(api.chats.mutations.updateChatTitle),
@@ -116,6 +119,11 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
 
   const { mutate: deleteChat } = useMutation({
     mutationFn: useConvexMutation(api.chats.mutations.deleteChat),
+    onSuccess: () => {
+      navigate({
+        to: '/',
+      });
+    },
   });
 
   const { mutate: togglePin } = useMutation({

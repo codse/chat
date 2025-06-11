@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
+import { Doc, Id } from '@convex/_generated/dataModel';
 
 const DefaultCatchBoundary = () => <div>DefaultCatchBoundary</div>;
 const NotFound = () => <div>NotFound</div>;
@@ -74,6 +75,7 @@ declare module '@tanstack/react-router' {
   }
 
   interface HistoryState {
-    message?: { content?: string };
+    message?: Doc<'messages'> | null;
+    chat?: Pick<Doc<'chats'>, '_id' | 'model' | 'title'> | null;
   }
 }

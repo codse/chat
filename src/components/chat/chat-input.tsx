@@ -10,7 +10,7 @@ import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
-import { Id } from '@convex/_generated/dataModel';
+import { Doc, Id } from '@convex/_generated/dataModel';
 import {
   Select,
   SelectContent,
@@ -24,28 +24,35 @@ import { useNavigate } from '@tanstack/react-router';
 export function ChatInput({
   chatId,
   defaultPrompt,
+  defaultModel,
 }: {
   chatId?: string;
   defaultPrompt?: string;
+  defaultModel?: string;
 }) {
   const navigate = useNavigate();
   const [input, setInput] = useState(defaultPrompt || '');
   const [files, setFiles] = useState<File[]>([]);
   const uploadInputRef = useRef<HTMLInputElement>(null);
-  const [modelId, setModelId] = useState<string>(modelsList[0].id);
+  const [modelId, setModelId] = useState<string>(
+    defaultModel || modelsList[0].id
+  );
 
   const { mutate: sendMessage, isPending } = useMutation({
     mutationFn: useConvexMutation(api.messages.mutations.sendMessage),
-    onSuccess: ({ chatId: newChatId }: { chatId: Id<'chats'> | undefined }) => {
+    onSuccess: (message: Doc<'messages'> | null) => {
       setInput('');
       setFiles([]);
-      if (newChatId && newChatId !== chatId) {
+      if (message?.chatId && message.chatId !== chatId) {
         navigate({
           to: '/chat/$chatId',
-          params: { chatId: newChatId },
+          params: { chatId: message.chatId },
           state: {
-            message: {
-              content: input,
+            message,
+            chat: {
+              _id: message.chatId,
+              model: modelId,
+              title: String(message.content.trim().slice(0, 50)),
             },
           },
         });
@@ -84,7 +91,7 @@ export function ChatInput({
       onValueChange={setInput}
       isLoading={isPending}
       onSubmit={handleSubmit}
-      className="w-full bg-transparent max-w-(--breakpoint-md) mx-auto border-b-0 self-center-safe"
+      className="w-full bg-transparent border-b-0 self-center-safe"
     >
       {files.length > 0 && (
         <div className="flex flex-wrap gap-2 pb-2">

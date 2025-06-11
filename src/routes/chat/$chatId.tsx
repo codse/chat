@@ -24,16 +24,20 @@ export const Route = createFileRoute('/chat/$chatId')({
       </Button>
     </div>
   ),
-  pendingComponent: () => <Skeleton />,
+  pendingComponent: () => <Skeleton className="h-full w-full" />,
 });
 
 function ChatPage() {
   const { chatId } = useParams({ from: '/chat/$chatId' });
   const { location, isLoading, isTransitioning } = useRouterState();
-  const initialMessage = location.state?.message?.content;
+  const initialMessage = location.state?.message;
+  const chat = location.state?.chat;
 
   return (
-    <div className="flex-1 flex flex-col h-full absolute w-full overflow-hidden">
+    <div
+      key={chatId}
+      className="flex-1 flex flex-col h-full absolute w-full overflow-hidden"
+    >
       <Suspense fallback={<Skeleton className="h-full w-full" />}>
         <ChatMessages
           className={
@@ -43,8 +47,11 @@ function ChatPage() {
           initialMessage={initialMessage}
         />
       </Suspense>
-      <div className="px-4">
-        <ChatInput chatId={chatId} />
+      <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
+        <ChatInput
+          chatId={chatId}
+          defaultModel={chat?.model || initialMessage?.model}
+        />
       </div>
     </div>
   );

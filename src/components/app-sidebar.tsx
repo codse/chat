@@ -44,9 +44,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroup>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Edit className="size-4" />
-                  New chat
+                <SidebarMenuButton asChild>
+                  <Link to="/" preload="intent">
+                    <Edit className="size-4" />
+                    New chat
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

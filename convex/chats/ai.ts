@@ -58,7 +58,7 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
 `.trim(),
     } as const;
 
-    const { messageId } = await ctx.runMutation(
+    const message = await ctx.runMutation(
       internal.messages.mutations.addMessage,
       {
         chatId,
@@ -70,7 +70,7 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
       }
     );
 
-    if (!messageId) {
+    if (!message?._id) {
       throw new Error('Unable to create response');
     }
 
@@ -107,14 +107,14 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
         }
 
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
-          messageId,
+          messageId: message._id,
           reasoning,
           content,
         });
       },
       onFinish: async (event) => {
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
-          messageId,
+          messageId: message._id,
           status: 'completed',
           endReason: event.finishReason,
         });
@@ -122,7 +122,7 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
       onError: async (event) => {
         console.log(event);
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
-          messageId,
+          messageId: message._id,
           status: 'completed',
           endReason: 'error',
         });

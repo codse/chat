@@ -35,6 +35,7 @@ export const listChats = query({
         }
         return q.eq('userId', userId).eq('pinned', false);
       })
+
       .order('desc')
       .filterWith(async (chat) => !chat.deleteTime)
       .paginate({
@@ -56,10 +57,10 @@ export const listChats = query({
 export const getChat = query({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    console.log('received http request', args.chatId);
     const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
+
     if (!user) {
-      // return null;
+      return null;
     }
 
     const chat = await ctx.db.get(args.chatId);

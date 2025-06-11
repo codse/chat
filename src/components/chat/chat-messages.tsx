@@ -8,7 +8,7 @@ import { Markdown } from '@/components/ui/markdown';
 import { Message, MessageContent } from '@/components/ui/message';
 import { convexQuery } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
-import { Id } from '@convex/_generated/dataModel';
+import { Doc, Id } from '@convex/_generated/dataModel';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import {
   Reasoning,
@@ -41,7 +41,7 @@ function ChatMessage({
       })}
     >
       {isAssistant ? (
-        <div className="prose rounded-lg p-2 max-w-[85%] sm:max-w-[75%] w-fit">
+        <div className="prose rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
           <MessageContent className="bg-transparent leading-normal" markdown>
             {message.content}
           </MessageContent>
@@ -84,7 +84,7 @@ export function ChatMessages({
   className,
 }: {
   chatId: string;
-  initialMessage?: string;
+  initialMessage?: Doc<'messages'> | null;
   className?: string;
 }) {
   const { data, isLoading, isError } = useSuspenseQuery({
@@ -101,11 +101,7 @@ export function ChatMessages({
       ? {
           page: [
             {
-              _id: 'initial' as Id<'messages'>,
-              _creationTime: Date.now(),
-              role: 'user',
-              content: initialMessage,
-              chatId: chatId as Id<'chats'>,
+              ...initialMessage,
             },
           ],
           isDone: false,

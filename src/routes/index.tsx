@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/chat-input';
 import { useState } from 'react';
 
 export const Route = createFileRoute('/')({
-  component: Home,
+  component: Chat,
   pendingComponent: () => <Skeleton />,
 });
 
@@ -28,7 +28,7 @@ function Chat() {
           <div className="@container/main flex flex-1 flex-col gap-2 [data-state=collapsed]:hidden">
             <ChatSuggestions onSuggestionClick={setSelectedSuggestion} />
           </div>
-          <div className="px-4">
+          <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
             <ChatInput
               defaultPrompt={selectedSuggestion}
               key={selectedSuggestion}
@@ -37,13 +37,5 @@ function Chat() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
-}
-
-function Home() {
-  return (
-    <>
-      <Chat />
-    </>
   );
 }
