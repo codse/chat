@@ -96,12 +96,8 @@ export default function ChatListItemActions() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Chat</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this chat?
-              <br />
-              This action cannot be undone.
-            </DialogDescription>
+            <DialogTitle>Delete {state?.chat?.title}?</DialogTitle>
+            <DialogDescription>This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>

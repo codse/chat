@@ -11,7 +11,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
-import { modelsList } from '@/utils/models';
+import { recommendedModelList } from '@/utils/models';
 import { useNavigate } from '@tanstack/react-router';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { AttachmentPreview } from './attachment-preview';
@@ -29,9 +29,11 @@ export function ChatInput({
   const navigate = useNavigate();
   const [input, setInput] = useState(defaultPrompt || '');
   const [modelId, setModelId] = useState<string>(
-    defaultModel || modelsList[0].id
+    defaultModel || recommendedModelList[0].id
   );
-  const selectedModel = modelsList.find((model) => model.id === modelId);
+  const selectedModel = recommendedModelList.find(
+    (model) => model.id === modelId
+  );
   const supportsFileUploads = selectedModel?.supports.includes('file');
   const supportsWebSearch = selectedModel?.supports.includes('search');
 
@@ -90,7 +92,7 @@ export function ChatInput({
       onValueChange={setInput}
       isLoading={isPending || isUploading}
       onSubmit={handleSubmit}
-      className="w-full bg-transparent border-b-0 self-center-safe"
+      className="w-full backdrop-blur-3xl border-b-0 self-center-safe border-2 shadow-sm focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1 transition-all"
     >
       <AttachmentPreview
         attachments={attachments}

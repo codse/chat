@@ -21,7 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { modelsList } from '@/utils/models';
+import { recommendedModelList } from '@/utils/models';
 
 const capabilityIcons = {
   vision: ImageIcon,
@@ -35,7 +35,7 @@ function ModelSelectItem({
   model,
   onSelect,
 }: {
-  model: (typeof modelsList)[number];
+  model: (typeof recommendedModelList)[number];
   onSelect: () => void;
 }) {
   return (
@@ -89,7 +89,7 @@ export function ModelSelect({
           <CommandList>
             <CommandEmpty>No model found.</CommandEmpty>
             <CommandGroup>
-              {modelsList.map((model) => (
+              {recommendedModelList.map((model) => (
                 <ModelSelectItem
                   onSelect={() => {
                     onValueChange(model.id);

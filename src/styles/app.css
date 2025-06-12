@@ -193,3 +193,7 @@
     background-position: -200% 50%;
   }
 }
+
+.prose > :last-child {
+  margin-bottom: 0;
+}

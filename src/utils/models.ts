@@ -229,11 +229,20 @@ export const supportedModels: Record<string, ModelProvider> = {
   },
 } as const;
 
-export const modelsList = Object.values(supportedModels)
-  .flatMap((provider) =>
-    provider.models.map((model) => ({
-      ...model,
-      provider: provider.info.name,
-    }))
-  )
+const modelName = new Map<string, string>();
+
+export const getModelName = (modelId?: string) => {
+  return (modelId ? modelName.get(modelId) : '') || modelId;
+};
+
+export const recommendedModelList = Object.values(supportedModels)
+  .flatMap((provider) => {
+    return provider.models.map((model) => {
+      modelName.set(model.id, model.name);
+      return {
+        ...model,
+        provider: provider.info.name,
+      };
+    });
+  })
   .filter((model) => model.recommended);

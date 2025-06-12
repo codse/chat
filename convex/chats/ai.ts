@@ -3,7 +3,7 @@ import { internalAction, internalQuery } from '../_generated/server';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { CoreMessage, CoreUserMessage, streamText } from 'ai';
 import { internal } from '../_generated/api';
-import { modelsList } from '@/utils/models';
+import { recommendedModelList } from '@/utils/models';
 
 export const getMessagesForAI = internalQuery({
   args: { chatId: v.id('chats') },
@@ -33,7 +33,9 @@ export const generateResponse = internalAction({
     const dbMessages = await ctx.runQuery(internal.chats.ai.getMessagesForAI, {
       chatId,
     });
-    const selectedModel = modelsList.find((model) => model.id === modelId);
+    const selectedModel = recommendedModelList.find(
+      (model) => model.id === modelId
+    );
     const supportsFileUploads = selectedModel?.supports.includes('file');
     const supportsImages = selectedModel?.supports.includes('vision');
 

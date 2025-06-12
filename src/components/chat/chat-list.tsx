@@ -28,7 +28,7 @@ function ChatListItemRename({
   onDone,
 }: {
   chat: Chat;
-  onDone: () => void;
+  onDone: (title: string) => void;
 }) {
   const [title, setTitle] = useState(chat.title);
 
@@ -49,7 +49,7 @@ function ChatListItemRename({
             ...chat,
             title,
           });
-          onDone();
+          onDone(title);
         }
       }}
       className="px-2 py-1.5 m-0 w-full h-full border-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
@@ -58,7 +58,7 @@ function ChatListItemRename({
           ...chat,
           title,
         });
-        onDone();
+        onDone(title);
       }}
     />
   );
@@ -68,14 +68,16 @@ function ChatListItemLink({
   chat,
   isMobile,
   onEditClick,
+  title,
 }: {
   chat: Chat;
   isMobile: boolean;
   onEditClick: () => void;
+  title: string;
 }) {
   return (
     <div className="flex items-center gap-2 px-2 py-1.5">
-      <span className="line-clamp-1">{chat.title}</span>
+      <span className="line-clamp-1">{title}</span>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -100,11 +102,12 @@ function ChatListItemLink({
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer"
-            onClick={() => {
+            onClick={(event) => {
               if (!chat?._id) {
                 return;
               }
 
+              event.stopPropagation();
               performAction('delete', chat);
             }}
           >
@@ -136,7 +139,11 @@ function ChatListItem({
   isMobile: boolean;
   active?: boolean;
 }) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [{ isEditing, localTitle }, setIsEditing] = useState({
+    isEditing: false,
+    localTitle: chat.title,
+  });
+
   return (
     <SidebarMenuItem
       key={chat._id}
@@ -147,7 +154,10 @@ function ChatListItem({
         isActive={active}
         onClick={() => {
           if (!isEditing) {
-            setIsEditing(true);
+            setIsEditing({
+              isEditing: true,
+              localTitle: chat.title,
+            });
           }
         }}
       >
@@ -160,13 +170,24 @@ function ChatListItem({
           {isEditing ? (
             <ChatListItemRename
               chat={chat}
-              onDone={() => setIsEditing(false)}
+              onDone={(title) => {
+                setIsEditing({
+                  isEditing: false,
+                  localTitle: title,
+                });
+              }}
             />
           ) : (
             <ChatListItemLink
               chat={chat}
+              title={localTitle}
               isMobile={isMobile}
-              onEditClick={() => setIsEditing(true)}
+              onEditClick={() =>
+                setIsEditing({
+                  isEditing: true,
+                  localTitle: chat.title,
+                })
+              }
             />
           )}
         </Link>

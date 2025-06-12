@@ -21,6 +21,10 @@ import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
 import { Message as MessageType } from '@/types/chat';
 import { AttachmentPreview } from './attachment-preview';
+import { getModelName } from '@/utils/models';
+import { Button } from '../ui/button';
+import { Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 function ChatMessage({
   message,
@@ -41,7 +45,12 @@ function ChatMessage({
         'min-h-[calc(100dvh-125px-var(--vh-offset))]': isLastMessage,
       })}
     >
-      <div className="flex flex-col gap-2 w-full">
+      <div
+        className={cn('flex flex-col gap-2 w-full', {
+          '[&_.chat-actions]:opacity-0 [&:hover_.chat-actions]:opacity-100':
+            !isLastMessage,
+        })}
+      >
         {showLoading && (
           <div className="px-4">
             <Loader
@@ -50,38 +59,57 @@ function ChatMessage({
             />
           </div>
         )}
-        <AttachmentPreview
-          attachments={message.attachments}
-          errors={[]}
-          preview
-          isUploading={false}
-        />
+        <AttachmentPreview attachments={message.attachments} preview />
         {isAssistant && (
-          <div className="prose rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
-            <MessageContent className="bg-transparent leading-normal" markdown>
-              {message.content}
-            </MessageContent>
-            {message.endReason === 'error' && (
-              <MessageContent className="bg-orange-50 text-orange-500 px-3.5 py-2.5 border border-orange-500/10 rounded-lg">
-                There was an error generating the response.
+          <>
+            <div className="rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
+              <MessageContent
+                className="bg-transparent leading-normal prose"
+                markdown
+              >
+                {message.content}
               </MessageContent>
-            )}
-            {Boolean(message.reasoning?.length) && (
-              <Reasoning defaultOpen={false} className="px-2 text-sm">
-                <ReasoningTrigger>Show reasoning</ReasoningTrigger>
-                {message?.status === 'pending' ? (
-                  <ReasoningResponse text={message.reasoning as string} />
-                ) : (
-                  <ReasoningContent>
-                    <Markdown>{message.reasoning as string}</Markdown>
-                  </ReasoningContent>
+              {message.endReason === 'error' && (
+                <MessageContent className="bg-orange-50 text-orange-500 px-3.5 py-2.5 border border-orange-500/10 rounded-lg">
+                  There was an error generating the response.
+                </MessageContent>
+              )}
+              {Boolean(message.reasoning?.length) && (
+                <Reasoning defaultOpen={false} className="px-2 text-sm">
+                  <ReasoningTrigger>Show reasoning</ReasoningTrigger>
+                  {message?.status === 'pending' ? (
+                    <ReasoningResponse text={message.reasoning as string} />
+                  ) : (
+                    <ReasoningContent>
+                      <Markdown>{message.reasoning as string}</Markdown>
+                    </ReasoningContent>
+                  )}
+                </Reasoning>
+              )}
+            </div>
+            {message?.status !== 'pending' && (
+              <div
+                className={cn(
+                  'text-xs inline-flex items-center gap-2 text-muted-foreground animate-in fade-in duration-100 chat-actions px-4'
                 )}
-              </Reasoning>
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(message.content);
+                    toast.success('Copied to clipboard');
+                  }}
+                >
+                  <Copy />
+                </Button>
+                {getModelName(message.model)}
+              </div>
             )}
-          </div>
+          </>
         )}
         {!isAssistant && Boolean(message.content?.length) && (
-          <MessageContent className="max-w-[85%] self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
+          <MessageContent className="max-w-[85%] prose self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
             {message.content}
           </MessageContent>
         )}
