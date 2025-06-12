@@ -47,7 +47,7 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
   };
 
   const shareUrl = sharedChatId
-    ? `${window.location.origin}/chat/${sharedChatId}`
+    ? `${window.location.origin}/share/${sharedChatId}`
     : '';
 
   return (

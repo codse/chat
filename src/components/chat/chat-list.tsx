@@ -214,10 +214,17 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
     })
   );
 
-  const match = useMatch({
+  const shareMatch = useMatch({
+    from: '/share/$chatId',
+    shouldThrow: false,
+  });
+
+  const chatMatch = useMatch({
     from: '/chat/$chatId',
     shouldThrow: false,
   });
+
+  const match = shareMatch || chatMatch;
 
   const { isMobile } = useSidebar();
   const chats = data?.chats;

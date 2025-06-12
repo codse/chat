@@ -15,7 +15,7 @@ import { MessageSkeleton } from '@/components/chat/message-skeleton';
 import ChatShare from '@/components/chat/chat-share';
 import { Id } from '@convex/_generated/dataModel';
 
-export const Route = createFileRoute('/chat copy/$chatId')({
+export const Route = createFileRoute('/share/$chatId')({
   component: ChatPage,
   notFoundComponent: () => (
     <div className="flex-1 h-full flex flex-col items-center justify-center">
@@ -47,7 +47,7 @@ function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
             className="text-foreground no-underline text-base"
             asChild
           >
-            <Link to="/chat/$chatId" params={{ chatId: chat._id }}>
+            <Link to="/share/$chatId" params={{ chatId: chat._id }}>
               {chat?.title}
             </Link>
           </Button>
@@ -62,7 +62,7 @@ function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
 }
 
 function ChatPage() {
-  const { chatId } = useParams({ from: '/chat/$chatId' });
+  const { chatId } = useParams({ from: '/share/$chatId' });
   const { location, isLoading, isTransitioning } = useRouterState();
   const initialMessage = location.state?.message;
   const chat = location.state?.chat;

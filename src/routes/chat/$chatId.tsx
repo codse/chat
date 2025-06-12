@@ -47,7 +47,7 @@ function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
             className="text-foreground no-underline text-base"
             asChild
           >
-            <Link to="/chat/$chatId" params={{ chatId: chat._id }}>
+            <Link to="/share/$chatId" params={{ chatId: chat._id }}>
               {chat?.title}
             </Link>
           </Button>
