@@ -2,12 +2,12 @@ import { api, internal } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
 import { internalMutation, mutation } from '@convex/_generated/server';
 import { v } from 'convex/values';
-import { Message } from './table';
+import { MessageFields } from './table';
 import { ALLOWED_FILE_TYPES } from '@/utils/uploads';
 
 export const addMessage = internalMutation({
   args: {
-    ...Message,
+    ...MessageFields,
     chatId: v.optional(v.id('chats')),
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
@@ -62,13 +62,10 @@ export const addMessage = internalMutation({
       status: args.status,
     };
 
-    if (lastModel !== currentModel) {
-      // Update chat to track last model
-      await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
-        chatId,
-        model: currentModel,
-      });
-    }
+    await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
+      chatId,
+      lastMessageTime: Date.now(),
+    });
 
     const messageId = await ctx.db.insert('messages', message);
 
@@ -86,7 +83,7 @@ export const addMessage = internalMutation({
 export const updateMessage = internalMutation({
   args: {
     messageId: v.id('messages'),
-    ...Message,
+    ...MessageFields,
     chatId: v.optional(v.id('chats')),
     content: v.optional(v.string()),
     role: v.optional(v.union(v.literal('user'), v.literal('assistant'))),
@@ -99,10 +96,10 @@ export const updateMessage = internalMutation({
 
 export const sendMessage = mutation({
   args: {
-    attachments: Message.attachments,
-    content: Message.content,
-    chatId: v.optional(Message.chatId),
-    model: Message.model,
+    attachments: MessageFields.attachments,
+    content: MessageFields.content,
+    chatId: v.optional(MessageFields.chatId),
+    model: MessageFields.model,
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
@@ -135,5 +132,39 @@ export const sendMessage = mutation({
       model: args.model,
       status: 'completed',
     });
+  },
+});
+
+export const cloneChat = internalMutation({
+  args: {
+    newChatId: v.id('chats'),
+    referenceId: v.optional(v.id('messages')),
+    parentChatId: v.id('chats'),
+  },
+  handler: async (ctx, args) => {
+    console.log('Cloning chat', args.parentChatId, 'to', args.newChatId);
+    const messages = await ctx.db
+      .query('messages')
+      .withIndex('by_chat_update_time', (q) =>
+        q.eq('chatId', args.parentChatId)
+      )
+      .order('asc')
+      .collect();
+    console.log('Copying messages:', messages.length);
+
+    await Promise.all(
+      messages.map(({ _id, _creationTime, ...message }) =>
+        ctx.db.insert('messages', {
+          ...message,
+          chatId: args.newChatId,
+        })
+      )
+    );
+    await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
+      chatId: args.newChatId,
+      backfilled: true,
+      lastMessageTime: Date.now(),
+    });
+    console.log(`Copied ${messages.length} messages to chat ${args.newChatId}`);
   },
 });

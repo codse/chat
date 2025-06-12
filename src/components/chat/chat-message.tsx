@@ -1,37 +1,32 @@
 'use client';
 
-import {
-  ChatContainerContent,
-  ChatContainerRoot,
-} from '@/components/ui/chat-container';
 import { Markdown } from '@/components/ui/markdown';
 import { Message, MessageContent } from '@/components/ui/message';
-import { convexQuery } from '@convex-dev/react-query';
-import { api } from '@convex/_generated/api';
-import { Doc, Id } from '@convex/_generated/dataModel';
-import { useSuspenseQuery } from '@tanstack/react-query';
 import {
   Reasoning,
   ReasoningContent,
   ReasoningResponse,
   ReasoningTrigger,
 } from '../ui/reasoning';
-import { ScrollButton } from '../ui/scroll-button';
 import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
 import { Message as MessageType } from '@/types/chat';
 import { AttachmentPreview } from './attachment-preview';
 import { getModelName } from '@/utils/models';
 import { Button } from '../ui/button';
-import { Copy } from 'lucide-react';
+import { GitBranch, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ChatMessage({
   message,
   isLastMessage,
+  onBranch,
+  isBranching,
 }: {
   message: MessageType;
   isLastMessage: boolean;
+  isBranching?: boolean;
+  onBranch: () => void;
 }) {
   const isAssistant = message.role === 'assistant';
   const showLoading = message.status === 'pending' && !message.content?.length;
@@ -90,13 +85,29 @@ export default function ChatMessage({
             {message?.status !== 'pending' && (
               <div
                 className={cn(
-                  'text-xs inline-flex items-center gap-2 text-muted-foreground animate-in fade-in duration-100 chat-actions px-4'
+                  'text-xs inline-flex items-center gap-0.5 text-muted-foreground animate-in fade-in duration-100 chat-actions px-2'
                 )}
               >
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
+                    console.log('Branching chat', message.model);
+                    onBranch();
+                  }}
+                  disabled={isBranching}
+                >
+                  <GitBranch />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="me-1"
+                  onClick={() => {
+                    if (!message?.content) {
+                      toast.error('No content to copy');
+                      return;
+                    }
                     navigator.clipboard.writeText(message.content);
                     toast.success('Copied to clipboard');
                   }}
@@ -115,69 +126,5 @@ export default function ChatMessage({
         )}
       </div>
     </Message>
-  );
-}
-
-export function ChatMessages({
-  chatId,
-  initialMessage,
-  className,
-}: {
-  chatId: string;
-  initialMessage?: Doc<'messages'> | null;
-  className?: string;
-}) {
-  const { data } = useSuspenseQuery({
-    ...convexQuery(api.chats.queries.getChatMessages, {
-      chatId: chatId as Id<'chats'>,
-      paginationOpts: {
-        cursor: null,
-        numItems: 100000,
-      },
-    }),
-    staleTime: 3000,
-    gcTime: 3000,
-    initialData: initialMessage
-      ? {
-          page: [
-            {
-              ...initialMessage,
-            },
-          ],
-          isDone: false,
-          continueCursor: '',
-        }
-      : {
-          page: [],
-          isDone: true,
-          continueCursor: '',
-        },
-  });
-
-  const messages = data?.page ?? [];
-
-  return (
-    <div
-      className={cn(
-        'h-full w-full overflow-y-auto overflow-x-hidden flex-1 flex flex-col relative',
-        className
-      )}
-    >
-      <ChatContainerRoot className="flex relative w-full flex-col mx-auto flex-1">
-        <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={message._id}
-              message={message}
-              isLastMessage={index === messages.length - 1}
-            />
-          ))}
-        </ChatContainerContent>
-        <ScrollButton
-          variant="secondary"
-          className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2"
-        />
-      </ChatContainerRoot>
-    </div>
   );
 }

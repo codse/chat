@@ -18,7 +18,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { MoreHorizontal, PencilIcon, PinIcon, TrashIcon } from 'lucide-react';
+import {
+  GitBranch,
+  MoreHorizontal,
+  PencilIcon,
+  PinIcon,
+  TrashIcon,
+} from 'lucide-react';
 import { performAction } from './utils';
 import { useState } from 'react';
 import { Input } from '../ui/input';
@@ -77,6 +83,7 @@ function ChatListItemLink({
 }) {
   return (
     <div className="flex items-center gap-2 px-2 py-1.5">
+      {chat.source === 'branch' && <GitBranch className="size-3" />}
       <span className="line-clamp-1">{title}</span>
 
       <DropdownMenu>
@@ -141,7 +148,7 @@ function ChatListItem({
 }) {
   const [{ isEditing, localTitle }, setIsEditing] = useState({
     isEditing: false,
-    localTitle: chat.title,
+    localTitle: '',
   });
 
   return (
@@ -180,7 +187,7 @@ function ChatListItem({
           ) : (
             <ChatListItemLink
               chat={chat}
-              title={localTitle}
+              title={localTitle || chat.title}
               isMobile={isMobile}
               onEditClick={() =>
                 setIsEditing({

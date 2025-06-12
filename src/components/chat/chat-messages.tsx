@@ -5,13 +5,15 @@ import {
   ChatContainerContent,
   ChatContainerRoot,
 } from '@/components/ui/chat-container';
-import { convexQuery } from '@convex-dev/react-query';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { ScrollButton } from '../ui/scroll-button';
 import { cn } from '@/lib/utils';
 import { MessageSkeleton } from './message-skeleton';
+import { toast } from 'sonner';
+import { useNavigate } from '@tanstack/react-router';
 
 const ChatMessage = React.lazy(() => import('./chat-message'));
 
@@ -25,7 +27,7 @@ export function ChatMessages({
   className?: string;
 }) {
   const { data } = useSuspenseQuery({
-    ...convexQuery(api.chats.queries.getChatMessages, {
+    ...convexQuery(api.messages.queries.getChatMessages, {
       chatId: chatId as Id<'chats'>,
       paginationOpts: {
         cursor: null,
@@ -53,6 +55,28 @@ export function ChatMessages({
 
   const messages = data?.page ?? [];
 
+  const navigate = useNavigate();
+  const { mutate: createBranch } = useMutation({
+    mutationFn: useConvexMutation(api.chats.mutations.branchChat),
+    onSuccess: (newChatId?: string) => {
+      if (!newChatId) {
+        toast.error('Failed to branch chat');
+        return;
+      }
+
+      navigate({
+        to: '/chat/$chatId',
+        params: {
+          chatId: newChatId,
+        },
+      });
+    },
+    onError: (error) => {
+      toast.error('Failed to branch chat');
+      console.error(error);
+    },
+  });
+
   return (
     <div
       className={cn(
@@ -68,6 +92,12 @@ export function ChatMessages({
                 key={message._id}
                 message={message}
                 isLastMessage={index === messages.length - 1}
+                onBranch={() => {
+                  createBranch({
+                    chatId: chatId as Id<'chats'>,
+                    model: message.model,
+                  });
+                }}
               />
             ))}
           </ChatContainerContent>

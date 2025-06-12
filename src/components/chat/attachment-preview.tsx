@@ -78,7 +78,11 @@ export function AttachmentPreview({
   }
 
   return (
-    <div className="flex flex-wrap gap-2 p-2 justify-end">
+    <div
+      className={cn('flex flex-wrap gap-2 p-2', {
+        'justify-end': preview,
+      })}
+    >
       {attachments?.map((file) => (
         <AttachmentPreviewItem
           key={file.fileId}

@@ -207,13 +207,21 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
           status: 'completed',
           endReason: event.finishReason,
         });
+        await ctx.runMutation(internal.chats.mutations.updateChat, {
+          chatId,
+          lastMessageTime: Date.now(),
+        });
       },
       onError: async (event) => {
-        console.log(event);
+        console.error(event);
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
           messageId: message._id,
           status: 'completed',
           endReason: 'error',
+        });
+        await ctx.runMutation(internal.chats.mutations.updateChat, {
+          chatId,
+          lastMessageTime: Date.now(),
         });
       },
     });

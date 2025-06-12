@@ -29,15 +29,14 @@ export const listChats = query({
 
     const chatStream = stream(ctx.db, schema)
       .query('chats')
-      .withIndex('by_user_pinned_update_time', (q): IndexRange => {
+      .withIndex('by_user_pinned_lastMessageTime', (q): IndexRange => {
         if (args.mode === 'pinned') {
           return q.eq('userId', userId).eq('pinned', true);
         }
-        return q.eq('userId', userId).eq('pinned', false);
+        return q.eq('userId', userId).eq('pinned', undefined);
       })
-
       .order('desc')
-      .filterWith(async (chat) => !chat.deleteTime)
+      .filterWith(async (chat) => !chat.deleteTime && chat.source !== 'share')
       .paginate({
         numItems: args.paginationOpts?.limit ?? 10,
         cursor: args.paginationOpts?.cursor ?? null,
@@ -72,42 +71,6 @@ export const getChat = query({
   },
 });
 
-export const getChatMessages = query({
-  args: {
-    chatId: v.id('chats'),
-    paginationOpts: v.object({
-      numItems: v.number(),
-      cursor: v.union(v.string(), v.null()),
-    }),
-  },
-  handler: async (ctx, args) => {
-    const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const chat = await ctx.db.get(args.chatId);
-    if (!chat) {
-      throw new Error('Chat not found');
-    }
-
-    if (chat.userId !== user._id) {
-      throw new Error('Unauthorized');
-    }
-
-    const response = await ctx.db
-      .query('messages')
-      .withIndex('by_chat_update_time', (q) => q.eq('chatId', args.chatId))
-      .order('asc')
-      .paginate({
-        numItems: args.paginationOpts?.numItems ?? 10,
-        cursor: args.paginationOpts?.cursor,
-      });
-
-    return response;
-  },
-});
-
 export const getSharedChat = query({
   args: {
     chatId: v.id('chats'),
@@ -117,52 +80,24 @@ export const getSharedChat = query({
     }),
   },
   handler: async (ctx, args) => {
-    const sharedChat = await ctx.db
-      .query('chats')
-      .withIndex('by_shared_update_time', (q) => q.eq('shared', true))
-      .filter((q) => q.eq(q.field('_id'), args.chatId))
+    const chat = await ctx.db.get(args.chatId);
+
+    if (!chat || chat.deleteTime) {
+      throw new Error('Chat not found');
+    }
+
+    if (chat.source !== 'share') {
+      throw new Error('Chat is no longer accessible');
+    }
+
+    const sharedBy = await ctx.db
+      .query('users')
+      .withIndex('by_id', (q) => q.eq('_id', chat.userId))
       .unique();
-
-    if (!sharedChat) {
-      return null;
-    }
-
-    const chat = await ctx.db.get(sharedChat._id);
-    if (!chat) {
-      return null;
-    }
-
-    const { page, continueCursor, isDone, pageStatus } = await ctx.db
-      .query('messages')
-      .withIndex('by_chat_update_time', (q) => q.eq('chatId', sharedChat._id))
-      .order('desc')
-      .paginate({
-        numItems: args.paginationOpts?.numItems ?? 10,
-        cursor: args.paginationOpts?.cursor,
-      });
-
-    const messagesWithUrls = await Promise.all(
-      page.map(async (message) => {
-        if (message.attachments) {
-          const attachmentsWithUrls = await Promise.all(
-            message.attachments.map(async (attachment) => ({
-              ...attachment,
-              url: await ctx.storage.getUrl(attachment.fileId),
-            }))
-          );
-          return { ...message, attachments: attachmentsWithUrls };
-        }
-        return message;
-      })
-    );
 
     return {
       chat,
-      messages: messagesWithUrls,
-      sharedBy: sharedChat.userId,
-      continueCursor,
-      isDone,
-      pageStatus,
+      sharedBy,
     };
   },
 });

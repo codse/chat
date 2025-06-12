@@ -15,7 +15,7 @@ import { MessageSkeleton } from '@/components/chat/message-skeleton';
 import ChatShare from '@/components/chat/chat-share';
 import { Id } from '@convex/_generated/dataModel';
 
-export const Route = createFileRoute('/chat/$chatId')({
+export const Route = createFileRoute('/chat copy/$chatId')({
   component: ChatPage,
   notFoundComponent: () => (
     <div className="flex-1 h-full flex flex-col items-center justify-center">

@@ -11,11 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as ChatcopyRouteImport } from './routes/chat copy/route'
 import { Route as ChatRouteImport } from './routes/chat/route'
 import { Route as IndexImport } from './routes/index'
 import { Route as ChatChatIdImport } from './routes/chat/$chatId'
+import { Route as ChatcopyChatIdImport } from './routes/chat copy/$chatId'
 
 // Create/Update Routes
+
+const ChatcopyRouteRoute = ChatcopyRouteImport.update({
+  id: '/chat copy',
+  path: '/chat copy',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const ChatRouteRoute = ChatRouteImport.update({
   id: '/chat',
@@ -35,6 +43,12 @@ const ChatChatIdRoute = ChatChatIdImport.update({
   getParentRoute: () => ChatRouteRoute,
 } as any)
 
+const ChatcopyChatIdRoute = ChatcopyChatIdImport.update({
+  id: '/$chatId',
+  path: '/$chatId',
+  getParentRoute: () => ChatcopyRouteRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -52,6 +66,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRoute
+    }
+    '/chat copy': {
+      id: '/chat copy'
+      path: '/chat copy'
+      fullPath: '/chat copy'
+      preLoaderRoute: typeof ChatcopyRouteImport
+      parentRoute: typeof rootRoute
+    }
+    '/chat copy/$chatId': {
+      id: '/chat copy/$chatId'
+      path: '/$chatId'
+      fullPath: '/chat copy/$chatId'
+      preLoaderRoute: typeof ChatcopyChatIdImport
+      parentRoute: typeof ChatcopyRouteImport
     }
     '/chat/$chatId': {
       id: '/chat/$chatId'
@@ -77,15 +105,31 @@ const ChatRouteRouteWithChildren = ChatRouteRoute._addFileChildren(
   ChatRouteRouteChildren,
 )
 
+interface ChatcopyRouteRouteChildren {
+  ChatcopyChatIdRoute: typeof ChatcopyChatIdRoute
+}
+
+const ChatcopyRouteRouteChildren: ChatcopyRouteRouteChildren = {
+  ChatcopyChatIdRoute: ChatcopyChatIdRoute,
+}
+
+const ChatcopyRouteRouteWithChildren = ChatcopyRouteRoute._addFileChildren(
+  ChatcopyRouteRouteChildren,
+)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteRouteWithChildren
+  '/chat copy': typeof ChatcopyRouteRouteWithChildren
+  '/chat copy/$chatId': typeof ChatcopyChatIdRoute
   '/chat/$chatId': typeof ChatChatIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteRouteWithChildren
+  '/chat copy': typeof ChatcopyRouteRouteWithChildren
+  '/chat copy/$chatId': typeof ChatcopyChatIdRoute
   '/chat/$chatId': typeof ChatChatIdRoute
 }
 
@@ -93,26 +137,41 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteRouteWithChildren
+  '/chat copy': typeof ChatcopyRouteRouteWithChildren
+  '/chat copy/$chatId': typeof ChatcopyChatIdRoute
   '/chat/$chatId': typeof ChatChatIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/chat/$chatId'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/chat copy'
+    | '/chat copy/$chatId'
+    | '/chat/$chatId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/chat/$chatId'
-  id: '__root__' | '/' | '/chat' | '/chat/$chatId'
+  to: '/' | '/chat' | '/chat copy' | '/chat copy/$chatId' | '/chat/$chatId'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/chat copy'
+    | '/chat copy/$chatId'
+    | '/chat/$chatId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRouteRoute: typeof ChatRouteRouteWithChildren
+  ChatcopyRouteRoute: typeof ChatcopyRouteRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRouteRoute: ChatRouteRouteWithChildren,
+  ChatcopyRouteRoute: ChatcopyRouteRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -126,7 +185,8 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
-        "/chat"
+        "/chat",
+        "/chat copy"
       ]
     },
     "/": {
@@ -137,6 +197,16 @@ export const routeTree = rootRoute
       "children": [
         "/chat/$chatId"
       ]
+    },
+    "/chat copy": {
+      "filePath": "chat copy/route.tsx",
+      "children": [
+        "/chat copy/$chatId"
+      ]
+    },
+    "/chat copy/$chatId": {
+      "filePath": "chat copy/$chatId.tsx",
+      "parent": "/chat copy"
     },
     "/chat/$chatId": {
       "filePath": "chat/$chatId.tsx",

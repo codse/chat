@@ -72,7 +72,7 @@ export const createChat = mutation({
     const chatId = await ctx.db.insert('chats', {
       title: sanitizedTitle,
       userId: user._id,
-      pinned: false,
+      lastMessageTime: Date.now(),
       model: args.model,
     });
 
@@ -85,17 +85,17 @@ export const updateChat = internalMutation({
     chatId: v.id('chats'),
     title: v.optional(v.string()),
     model: v.optional(v.string()),
+    backfilled: v.optional(v.boolean()),
+    referenceId: v.optional(v.id('messages')),
+    lastMessageTime: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    let updates: Partial<Doc<'chats'>> = {};
-    if (args.title) {
-      updates.title = args.title;
-    }
-    if (args.model) {
-      updates.model = args.model;
-    }
+    const { chatId, ...updates } = args;
 
-    await ctx.db.patch(args.chatId, updates);
+    await ctx.db.patch(args.chatId, {
+      ...updates,
+      updateTime: Date.now(),
+    });
   },
 });
 
@@ -149,14 +149,76 @@ export const deleteChat = mutation({
   },
 });
 
+export const cloneChat = internalMutation({
+  args: {
+    chatId: v.id('chats'),
+    userId: v.id('users'),
+    title: v.string(),
+    model: v.string(),
+    source: v.union(v.literal('branch'), v.literal('share')),
+  },
+  handler: async (ctx, args) => {
+    const lastMessage = await ctx.db
+      .query('messages')
+      .withIndex('by_chat_update_time', (q) => q.eq('chatId', args.chatId))
+      .order('desc')
+      .first();
+
+    const newChatId = await ctx.db.insert('chats', {
+      title: args.title,
+      userId: args.userId,
+      model: args.model,
+      referenceId: lastMessage?._id,
+      parentId: args.chatId,
+      updateTime: Date.now(),
+      source: args.source,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.messages.mutations.cloneChat, {
+      newChatId,
+      parentChatId: args.chatId,
+    });
+
+    return newChatId;
+  },
+});
+
 export const shareChat = mutation({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    await checkChatPermissions(ctx, args.chatId);
+    const { chat } = await checkChatPermissions(ctx, args.chatId);
+    const newChatId: Id<'chats'> = await ctx.runMutation(
+      internal.chats.mutations.cloneChat,
+      {
+        chatId: args.chatId,
+        userId: chat.userId,
+        title: chat.title,
+        model: chat.model,
+        source: 'share',
+      }
+    );
 
-    await ctx.db.patch(args.chatId, {
-      shared: true,
-    });
+    return newChatId;
+  },
+});
+
+export const branchChat = mutation({
+  args: { chatId: v.id('chats'), model: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const { chat } = await checkChatPermissions(ctx, args.chatId);
+    console.log('Branching chat', args.chatId, 'with model', args.model);
+    const newChatId: Id<'chats'> = await ctx.runMutation(
+      internal.chats.mutations.cloneChat,
+      {
+        chatId: args.chatId,
+        userId: chat.userId,
+        title: chat.title,
+        source: 'branch',
+        model: args.model ?? chat.model,
+      }
+    );
+
+    return newChatId;
   },
 });
 
@@ -165,6 +227,9 @@ export const pinChat = mutation({
   handler: async (ctx, args) => {
     const { chat } = await checkChatPermissions(ctx, args.chatId);
 
-    await ctx.db.patch(args.chatId, { pinned: !chat.pinned });
+    await ctx.db.patch(args.chatId, {
+      pinned: chat.pinned ? undefined : true,
+      updateTime: Date.now(),
+    });
   },
 });

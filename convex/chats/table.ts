@@ -6,13 +6,27 @@ export const chatsTable = defineTable({
   userId: v.id('users'),
   model: v.string(),
   pinned: v.optional(v.boolean()),
-  shared: v.optional(v.boolean()),
+  // source = share (created from shared chat)
+  // source = branch (branched from existing chat)
+  // source = undefined (created by user, original chat)
+  source: v.optional(v.union(v.literal('branch'), v.literal('share'))),
   // For branching conversations
   parentId: v.optional(v.id('chats')),
+  // backfilled = true (chat was backfilled from a shared/branch chat),
+  referenceId: v.optional(v.id('messages')),
+  backfilled: v.optional(v.boolean()),
   updateTime: v.optional(v.number()),
   deleteTime: v.optional(v.number()),
+  lastMessageTime: v.optional(v.number()),
 })
-  .index('by_parent_update_time', ['parentId', 'updateTime'])
-  .index('by_shared_update_time', ['shared', 'updateTime'])
-  .index('by_user_delete_time', ['userId', 'deleteTime'])
-  .index('by_user_pinned_update_time', ['userId', 'pinned', 'updateTime']);
+  .index('by_user_pinned_lastMessageTime', [
+    'userId',
+    'pinned',
+    'lastMessageTime',
+  ])
+  .searchIndex('search_by_title', {
+    searchField: 'title',
+    filterFields: ['lastMessageTime', 'source'],
+  });
+
+export const ChatFields = chatsTable.validator.fields;

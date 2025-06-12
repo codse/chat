@@ -34,8 +34,6 @@ export const messagesTable = defineTable({
   ),
   updateTime: v.optional(v.number()),
   deleteTime: v.optional(v.number()),
-})
-  .index('by_chat_update_time', ['chatId', 'updateTime'])
-  .index('by_delete_time', ['deleteTime']);
+}).index('by_chat_update_time', ['chatId', 'updateTime']);
 
-export const Message = messagesTable.validator.fields;
+export const MessageFields = messagesTable.validator.fields;
