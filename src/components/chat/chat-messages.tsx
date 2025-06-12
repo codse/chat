@@ -41,7 +41,7 @@ function ChatMessage({
         'min-h-[calc(100dvh-125px-var(--vh-offset))]': isLastMessage,
       })}
     >
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 w-full">
         {showLoading && (
           <div className="px-4">
             <Loader
@@ -62,7 +62,7 @@ function ChatMessage({
               {message.content}
             </MessageContent>
             {message.endReason === 'error' && (
-              <MessageContent className="bg-orange-50 text-orange-500">
+              <MessageContent className="bg-orange-50 text-orange-500 px-3.5 py-2.5 border border-orange-500/10 rounded-lg">
                 There was an error generating the response.
               </MessageContent>
             )}

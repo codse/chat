@@ -18,6 +18,10 @@ import { Link } from '@tanstack/react-router';
 import { Edit, SearchIcon } from 'lucide-react';
 import { Suspense } from 'react';
 
+const ChatListItemActions = React.lazy(
+  () => import('./chat/chat-list-item-actions')
+);
+
 function SideBarActions() {
   return (
     <div className="fixed top-1.5 left-1.5 z-50">
@@ -64,6 +68,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </Suspense>
           <Suspense>
             <ChatList mode="recent" />
+          </Suspense>
+          <Suspense>
+            <ChatListItemActions />
           </Suspense>
         </SidebarContent>
         <SidebarFooter>
