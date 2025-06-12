@@ -3,6 +3,9 @@
 import { cn } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import { codeToHtml } from 'shiki';
+import { Button } from './button';
+import { Copy, Download } from 'lucide-react';
+import { toast } from 'sonner';
 
 export type CodeBlockProps = {
   children?: React.ReactNode;
@@ -13,7 +16,7 @@ function CodeBlock({ children, className, ...props }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        'not-prose flex w-full flex-col overflow-clip border',
+        'not-prose flex w-full flex-col overflow-clip border [&_~.not-prose]:mt-5',
         'border-border bg-card text-card-foreground rounded-xl',
         className
       )}
@@ -59,18 +62,37 @@ function CodeBlockCode({
   );
 
   // SSR fallback: render plain code if not hydrated yet
-  return highlightedHtml ? (
-    <div
-      className={classNames}
-      dangerouslySetInnerHTML={{ __html: highlightedHtml }}
-      {...props}
-    />
-  ) : (
-    <div className={classNames} {...props}>
-      <pre>
-        <code>{code}</code>
-      </pre>
-    </div>
+  return (
+    <>
+      <div className="pe-2 ps-4 py-1 text-xs text-muted-foreground border-b border-border flex items-center justify-between gap-2">
+        <div className="text-sm font-medium">{language}</div>
+
+        <Button
+          variant="ghost"
+          className="size-7"
+          size="icon"
+          onClick={() => {
+            navigator.clipboard.writeText(code);
+            toast.success('Copied to clipboard');
+          }}
+        >
+          <Copy className="size-3.5" />
+        </Button>
+      </div>
+      {highlightedHtml ? (
+        <div
+          className={classNames}
+          dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+          {...props}
+        />
+      ) : (
+        <div className={classNames} {...props}>
+          <pre>
+            <code>{code}</code>
+          </pre>
+        </div>
+      )}
+    </>
   );
 }
 

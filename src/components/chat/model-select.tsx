@@ -22,6 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { recommendedModelList } from '@/utils/models';
+import { Skeleton } from '../ui/skeleton';
 
 const capabilityIcons = {
   vision: ImageIcon,
@@ -64,9 +65,11 @@ function ModelSelectItem({
 export function ModelSelect({
   label,
   onValueChange,
+  showLoading,
 }: {
   label: string;
   onValueChange: (value: string) => void;
+  showLoading?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
 
@@ -79,7 +82,9 @@ export function ModelSelect({
           aria-expanded={open}
           className="max-w-[250px] w-fit justify-between border-none text-xs text-muted-foreground py-0 font-semibold px-0 shadow-none"
         >
-          <span className="truncate">{label}</span>
+          <span className="truncate">
+            {showLoading ? <Skeleton className="h-4 w-20" /> : label}
+          </span>
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

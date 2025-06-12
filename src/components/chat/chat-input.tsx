@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/prompt-input';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, Paperclip, Search, Square, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
@@ -16,6 +16,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { AttachmentPreview } from './attachment-preview';
 import { ModelSelect } from './model-select';
+import { useChatContext } from './chat-context';
 
 export function ChatInput({
   chatId,
@@ -36,6 +37,7 @@ export function ChatInput({
   );
   const supportsFileUploads = selectedModel?.supports.includes('file');
   const supportsWebSearch = selectedModel?.supports.includes('search');
+  const { chat } = useChatContext();
 
   const {
     attachments,
@@ -86,6 +88,12 @@ export function ChatInput({
     }
   };
 
+  useEffect(() => {
+    if (chat?.model) {
+      setModelId(chat.model);
+    }
+  }, [chat?.model]);
+
   return (
     <PromptInput
       value={input}
@@ -104,6 +112,7 @@ export function ChatInput({
       <PromptInputTextarea
         autoFocus
         placeholder="Type your message here..."
+        className="text-muted-foreground"
         onPaste={handlePaste}
       />
 
@@ -114,6 +123,7 @@ export function ChatInput({
             onValueChange={(value) => {
               setModelId(value);
             }}
+            showLoading={!!chatId && !chat}
           />
           <PromptInputAction tooltip="Attach files">
             <label htmlFor="file-upload">
