@@ -1,5 +1,6 @@
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuAction,
   SidebarMenuButton,
@@ -144,10 +145,10 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <span className="text-sm font-medium px-2 mb-0.5 text-muted-foreground">
+      <SidebarGroupLabel>
         {mode === 'pinned' ? 'Pinned' : 'Recent'}
-      </span>
-      <SidebarMenu>
+      </SidebarGroupLabel>
+      <SidebarMenu className="ps-2">
         {chats?.map((chat) => (
           <ChatListItem
             key={chat._id}

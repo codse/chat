@@ -5,21 +5,17 @@ import {
   PromptInputTextarea,
 } from '@/components/ui/prompt-input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Paperclip, Square, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { ArrowUp, Paperclip, Search, Square, X } from 'lucide-react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import { modelsList } from '@/utils/models';
 import { useNavigate } from '@tanstack/react-router';
+import { useFileUpload } from '@/hooks/use-file-upload';
+import { AttachmentPreview } from './attachment-preview';
+import { ModelSelect } from './model-select';
 
 export function ChatInput({
   chatId,
@@ -32,41 +28,43 @@ export function ChatInput({
 }) {
   const navigate = useNavigate();
   const [input, setInput] = useState(defaultPrompt || '');
-  const [files, setFiles] = useState<File[]>([]);
-  const uploadInputRef = useRef<HTMLInputElement>(null);
   const [modelId, setModelId] = useState<string>(
     defaultModel || modelsList[0].id
   );
+  const selectedModel = modelsList.find((model) => model.id === modelId);
+  const supportsFileUploads = selectedModel?.supports.includes('file');
+  const supportsWebSearch = selectedModel?.supports.includes('search');
+
+  const {
+    attachments,
+    isUploading,
+    errors,
+    handleFiles,
+    removeAttachment,
+    reset: resetFiles,
+  } = useFileUpload();
 
   const { mutate: sendMessage, isPending } = useMutation({
     mutationFn: useConvexMutation(api.messages.mutations.sendMessage),
     onSuccess: (message: Doc<'messages'> | null) => {
       setInput('');
-      setFiles([]);
+      resetFiles();
       if (message?.chatId && message.chatId !== chatId) {
         navigate({
           to: '/chat/$chatId',
           params: { chatId: message.chatId },
-          state: {
-            message,
-            chat: {
-              _id: message.chatId,
-              model: modelId,
-              title: String(message.content.trim().slice(0, 50)),
-            },
-          },
         });
       }
     },
   });
 
   const handleSubmit = () => {
-    if (input.trim() || files.length > 0) {
+    if (input.trim() || attachments.length > 0) {
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
         content: input,
         model: modelId,
-        // attachments: files,
+        attachments,
       });
     }
   };
@@ -74,14 +72,15 @@ export function ChatInput({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
-      setFiles((prev) => [...prev, ...newFiles]);
+      handleFiles(newFiles);
     }
   };
 
-  const handleRemoveFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-    if (uploadInputRef?.current) {
-      uploadInputRef.current.value = '';
+  const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (event.clipboardData.files && event.clipboardData.files.length > 0) {
+      event.preventDefault();
+      const newFiles = Array.from(event.clipboardData.files);
+      handleFiles(newFiles);
     }
   };
 
@@ -89,80 +88,78 @@ export function ChatInput({
     <PromptInput
       value={input}
       onValueChange={setInput}
-      isLoading={isPending}
+      isLoading={isPending || isUploading}
       onSubmit={handleSubmit}
       className="w-full bg-transparent border-b-0 self-center-safe"
     >
-      {files.length > 0 && (
-        <div className="flex flex-wrap gap-2 pb-2">
-          {files.map((file, index) => (
-            <div
-              key={index}
-              className="bg-secondary flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
-            >
-              <Paperclip className="size-4" />
-              <span className="max-w-[120px] truncate">{file.name}</span>
-              <button
-                onClick={() => handleRemoveFile(index)}
-                className="hover:bg-secondary/50 rounded-full p-1"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <AttachmentPreview
+        attachments={attachments}
+        errors={errors}
+        isUploading={isUploading}
+        removeAttachment={removeAttachment}
+      />
 
-      <PromptInputTextarea autoFocus placeholder="Type your message here..." />
+      <PromptInputTextarea
+        autoFocus
+        placeholder="Type your message here..."
+        onPaste={handlePaste}
+      />
 
       <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
-        <div className="flex items-center gap-2 px-2">
-          <PromptInputAction tooltip="Model">
-            <Select
-              value={modelId}
-              onValueChange={(value) => {
-                setModelId(value);
-              }}
-            >
-              <SelectTrigger className="border-none text-xs text-muted-foreground font-semibold px-1 shadow-none">
-                <SelectValue placeholder="Select a model" />
-                <SelectContent>
-                  {modelsList.map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </SelectTrigger>
-            </Select>
-          </PromptInputAction>
+        <div className="flex items-center gap-2">
+          <ModelSelect
+            label={selectedModel?.name || 'Select model...'}
+            onValueChange={(value) => {
+              setModelId(value);
+            }}
+          />
           <PromptInputAction tooltip="Attach files">
-            <label
-              htmlFor="file-upload"
-              className="hover:bg-secondary-foreground/10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-2xl"
-            >
+            <label htmlFor="file-upload">
+              <Button
+                variant="outline"
+                size="icon"
+                asChild
+                disabled={!supportsFileUploads}
+                className="h-8 w-8 rounded-full"
+              >
+                <span>
+                  <Paperclip className="text-primary size-3.5" />
+                </span>
+              </Button>
               <input
                 type="file"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
                 id="file-upload"
+                accept="image/*,text/plain,application/pdf,text/markdown,text/csv,application/json"
+                disabled={isUploading}
               />
-              <Paperclip className="text-primary size-5" />
             </label>
+          </PromptInputAction>
+          <PromptInputAction tooltip="Search the web">
+            <Button
+              variant="outline"
+              size="icon"
+              disabled={!supportsWebSearch}
+              className="h-8 w-8 rounded-full"
+            >
+              <Search className="size-3.5" />
+            </Button>
           </PromptInputAction>
         </div>
 
         <PromptInputAction
-          tooltip={isPending ? 'Stop generation' : 'Send message'}
+          tooltip={isPending || isUploading ? 'Processing...' : 'Send message'}
         >
           <Button
             variant="default"
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full me-1"
             onClick={handleSubmit}
+            disabled={isPending || isUploading}
           >
-            {isPending ? (
+            {isPending || isUploading ? (
               <Square className="size-5 fill-current" />
             ) : (
               <ArrowUp className="size-5" />

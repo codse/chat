@@ -6,8 +6,15 @@ export type ModelProvider = {
   models: Model[];
 };
 
+export type ModelCapability =
+  | 'vision'
+  | 'file'
+  | 'text'
+  | 'search'
+  | 'reasoning';
+
 export type Model = {
-  supports: ('vision' | 'file' | 'text' | 'search' | 'reasoning')[];
+  supports: ModelCapability[];
   id: string;
   name: string;
   recommended?: boolean;
@@ -28,13 +35,13 @@ export const supportedModels: Record<string, ModelProvider> = {
         recommended: true,
       },
       {
-        supports: ['vision', 'file', 'text', 'search'],
+        supports: ['vision', 'file', 'text', 'search', 'reasoning'],
         id: 'google/gemini-2.5-pro-preview',
         name: 'Gemini 2.5 Pro (Preview)',
         recommended: true,
       },
       {
-        supports: ['vision', 'file', 'text', 'search'],
+        supports: ['vision', 'file', 'text', 'search', 'reasoning'],
         id: 'google/gemini-2.5-flash-preview-05-20:thinking',
         name: 'Gemini 2.5 Flash (Thinking)',
       },

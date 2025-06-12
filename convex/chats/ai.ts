@@ -1,18 +1,26 @@
 import { v } from 'convex/values';
-import { internalAction, internalMutation } from '../_generated/server';
+import { internalAction, internalQuery } from '../_generated/server';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { smoothStream, streamText } from 'ai';
-import { api, internal } from '../_generated/api';
+import { CoreMessage, CoreUserMessage, streamText } from 'ai';
+import { internal } from '../_generated/api';
+import { modelsList } from '@/utils/models';
+
+export const getMessagesForAI = internalQuery({
+  args: { chatId: v.id('chats') },
+  handler: async (ctx, { chatId }) => {
+    const maxContextMessages = 20;
+    const messages = await ctx.db
+      .query('messages')
+      .withIndex('by_chat_update_time', (q) => q.eq('chatId', chatId))
+      .order('desc')
+      .take(maxContextMessages);
+    return messages.reverse();
+  },
+});
 
 export const generateResponse = internalAction({
   args: {
     chatId: v.id('chats'),
-    messages: v.array(
-      v.object({
-        role: v.union(v.literal('user'), v.literal('assistant')),
-        content: v.string(),
-      })
-    ),
     model: v.string(),
   },
   handler: async (ctx, args) => {
@@ -20,12 +28,91 @@ export const generateResponse = internalAction({
       apiKey: process.env.OPENROUTER_API_KEY,
     });
 
-    const { chatId, messages, model } = args;
+    const { chatId, model: modelId } = args;
+
+    const dbMessages = await ctx.runQuery(internal.chats.ai.getMessagesForAI, {
+      chatId,
+    });
+    const selectedModel = modelsList.find((model) => model.id === modelId);
+    const supportsFileUploads = selectedModel?.supports.includes('file');
+    const supportsImages = selectedModel?.supports.includes('vision');
+
+    const messages = await Promise.all(
+      dbMessages.map(async (message) => {
+        if (message.role === 'system') {
+          return null;
+        }
+
+        if (
+          !message?.attachments?.length ||
+          (!supportsFileUploads && !supportsImages)
+        ) {
+          return {
+            role: message.role,
+            content: message.content!,
+          };
+        }
+
+        const contentParts: CoreUserMessage['content'] = [
+          { type: 'text', text: message.content! },
+        ];
+
+        for (const attachment of message.attachments) {
+          const buffer = await ctx.storage.get(attachment.fileId);
+          if (!buffer) {
+            continue;
+          }
+
+          const arrayBuffer = await buffer.arrayBuffer();
+
+          if (attachment.fileType.startsWith('image/')) {
+            contentParts.push({
+              type: 'image',
+              image: arrayBuffer,
+              mimeType: attachment.fileType,
+            });
+            continue;
+          }
+
+          if (!supportsFileUploads) {
+            continue;
+          }
+
+          const isPDF = attachment.fileType === 'application/pdf';
+          if (isPDF) {
+            contentParts.push({
+              type: 'file',
+              data: arrayBuffer,
+              mimeType: 'application/pdf',
+              filename: attachment.fileName,
+            });
+          } else {
+            const textDecoder = new TextDecoder();
+            const plainText = textDecoder.decode(arrayBuffer);
+            contentParts.push({
+              type: 'text',
+              text: `
+User uploaded this text file:
+
+<user-uploaded-file name="${attachment.fileName}">
+${plainText}
+</user-uploaded-file>
+`.trim(),
+            });
+          }
+        }
+
+        return {
+          role: message.role,
+          content: contentParts,
+        };
+      })
+    );
 
     const systemMessage = {
       role: 'system',
       content: `
-You are **${model}**, a powerful AI assistant. You help users solve problems, answer questions, and complete tasks accurately and efficiently.
+You are **${selectedModel?.name}**, a powerful AI assistant. You help users solve problems, answer questions, and complete tasks accurately and efficiently.
 
 **Core Principles**:
 - Provide direct, accurate responses to user questions
@@ -66,7 +153,7 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
         content: '',
         reasoning: '',
         status: 'pending',
-        model,
+        model: modelId,
       }
     );
 
@@ -77,8 +164,8 @@ You are **${model}**, a powerful AI assistant. You help users solve problems, an
     let reasoning = '';
     let content = '';
     const stream = streamText({
-      model: openrouter(model),
-      messages: [systemMessage, ...messages],
+      model: openrouter(modelId),
+      messages: [systemMessage, ...messages.filter((m) => m !== null)] as any,
       onChunk: async (event) => {
         let current = '';
         if (event.chunk.type === 'reasoning') {

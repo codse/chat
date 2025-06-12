@@ -20,6 +20,7 @@ import { ScrollButton } from '../ui/scroll-button';
 import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
 import { Message as MessageType } from '@/types/chat';
+import { AttachmentPreview } from './attachment-preview';
 
 function ChatMessage({
   message,
@@ -40,40 +41,51 @@ function ChatMessage({
         'min-h-[calc(100dvh-125px-var(--vh-offset))]': isLastMessage,
       })}
     >
-      {isAssistant ? (
-        <div className="prose rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
-          <MessageContent className="bg-transparent leading-normal" markdown>
+      <div className="flex flex-col gap-2">
+        {showLoading && (
+          <div className="px-4">
+            <Loader
+              variant={message.reasoning ? 'text-shimmer' : 'typing'}
+              text={message.reasoning ? 'Reasoning...' : ''}
+            />
+          </div>
+        )}
+        <AttachmentPreview
+          attachments={message.attachments}
+          errors={[]}
+          preview
+          isUploading={false}
+        />
+        {isAssistant && (
+          <div className="prose rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
+            <MessageContent className="bg-transparent leading-normal" markdown>
+              {message.content}
+            </MessageContent>
+            {message.endReason === 'error' && (
+              <MessageContent className="bg-orange-50 text-orange-500">
+                There was an error generating the response.
+              </MessageContent>
+            )}
+            {Boolean(message.reasoning?.length) && (
+              <Reasoning defaultOpen={false} className="px-2 text-sm">
+                <ReasoningTrigger>Show reasoning</ReasoningTrigger>
+                {message?.status === 'pending' ? (
+                  <ReasoningResponse text={message.reasoning as string} />
+                ) : (
+                  <ReasoningContent>
+                    <Markdown>{message.reasoning as string}</Markdown>
+                  </ReasoningContent>
+                )}
+              </Reasoning>
+            )}
+          </div>
+        )}
+        {!isAssistant && Boolean(message.content?.length) && (
+          <MessageContent className="max-w-[85%] self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
             {message.content}
           </MessageContent>
-          {message.endReason === 'error' && (
-            <MessageContent className="bg-orange-50 text-orange-500">
-              There was an error generating the response.
-            </MessageContent>
-          )}
-          {Boolean(message.reasoning?.length) && (
-            <Reasoning defaultOpen={false} className="px-2 text-sm">
-              <ReasoningTrigger>Show reasoning</ReasoningTrigger>
-              {message?.status === 'pending' ? (
-                <ReasoningResponse text={message.reasoning as string} />
-              ) : (
-                <ReasoningContent>
-                  <Markdown>{message.reasoning as string}</Markdown>
-                </ReasoningContent>
-              )}
-            </Reasoning>
-          )}
-        </div>
-      ) : (
-        <MessageContent className="max-w-[85%] sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
-          {message.content}
-        </MessageContent>
-      )}
-      {showLoading && (
-        <Loader
-          variant={message.reasoning ? 'text-shimmer' : 'typing'}
-          text={message.reasoning ? 'Reasoning...' : ''}
-        />
-      )}
+        )}
+      </div>
     </Message>
   );
 }
@@ -87,7 +99,7 @@ export function ChatMessages({
   initialMessage?: Doc<'messages'> | null;
   className?: string;
 }) {
-  const { data, isLoading, isError } = useSuspenseQuery({
+  const { data } = useSuspenseQuery({
     ...convexQuery(api.chats.queries.getChatMessages, {
       chatId: chatId as Id<'chats'>,
       paginationOpts: {
@@ -115,14 +127,6 @@ export function ChatMessages({
   });
 
   const messages = data?.page ?? [];
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isError) {
-    return <div>Error</div>;
-  }
 
   return (
     <div
