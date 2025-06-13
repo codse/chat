@@ -1,92 +1,16 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  createFileRoute,
-  Link,
-  useParams,
-  useRouterState,
-} from '@tanstack/react-router';
-import { ChatInput } from '@/components/chat/chat-input';
-import { ChatMessages } from '@/components/chat/chat-messages';
-import { Suspense } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChatProvider, useChatContext } from '@/components/chat/chat-context';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { MessageSkeleton } from '@/components/chat/message-skeleton';
-import ChatShare from '@/components/chat/chat-share';
-import { Id } from '@convex/_generated/dataModel';
+import { createFileRoute, useParams } from '@tanstack/react-router';
+import { ChatNotFound } from '@/components/chat/chat-not-found';
+import { ChatView } from '@/components/chat/chat-view';
 
 export const Route = createFileRoute('/share/$chatId')({
   component: ChatPage,
-  notFoundComponent: () => (
-    <div className="flex-1 h-full flex flex-col items-center justify-center">
-      <div className="text-muted-foreground mb-4">
-        The chat you are looking for does not exist.
-      </div>
-      <Button asChild>
-        <Link to="/" className="text-sm text-muted-foreground">
-          Start a new chat
-        </Link>
-      </Button>
-    </div>
-  ),
+  notFoundComponent: ChatNotFound,
   pendingComponent: () => <Skeleton className="h-full w-full" />,
 });
 
-function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
-  const { chat } = useChatContext();
-  const isLoading = !chat;
-  return (
-    <header className="py-4 w-full border-b border-border sticky z-10 chat-header flex px-4">
-      <SidebarTrigger className="size-10" />
-      <div className="flex flex-1 items-center gap-2 max-w-[var(--breakpoint-md)] mx-auto justify-between">
-        {isLoading ? (
-          <Skeleton className="h-6 w-40 mx-4" />
-        ) : (
-          <Button
-            variant="link"
-            className="text-foreground no-underline text-base"
-            asChild
-          >
-            <Link to="/share/$chatId" params={{ chatId: chat._id }}>
-              {chat?.title}
-            </Link>
-          </Button>
-        )}
-
-        <div className="flex items-center gap-2">
-          <ChatShare chatId={chatId} />
-        </div>
-      </div>
-    </header>
-  );
-}
-
 function ChatPage() {
   const { chatId } = useParams({ from: '/share/$chatId' });
-  const { location, isLoading, isTransitioning } = useRouterState();
-  const initialMessage = location.state?.message;
-  const chat = location.state?.chat;
-  const model = chat?.model || initialMessage?.model;
 
-  return (
-    <ChatProvider
-      key={chatId}
-      chatId={chatId}
-      className="flex-1 flex flex-col h-full bg-background absolute w-full overflow-hidden"
-    >
-      <ChatHeader chatId={chatId as Id<'chats'>} />
-      <Suspense fallback={<MessageSkeleton />}>
-        <ChatMessages
-          className={
-            isLoading || isTransitioning ? 'opacity-50' : 'animate-in fade-in'
-          }
-          chatId={chatId}
-          initialMessage={initialMessage}
-        />
-      </Suspense>
-      <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
-        <ChatInput chatId={chatId} defaultModel={model} />
-      </div>
-    </ChatProvider>
-  );
+  return <ChatView chatId={chatId} />;
 }

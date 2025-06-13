@@ -85,7 +85,7 @@ export default function ChatMessage({
             {message?.status !== 'pending' && (
               <div
                 className={cn(
-                  'text-xs inline-flex items-center gap-0.5 text-muted-foreground animate-in fade-in duration-100 chat-actions px-2'
+                  'text-xs inline-flex items-center gap-0.5 text-muted-foreground animate-in fade-in duration-100 chat-actions px-2 -mt-4'
                 )}
               >
                 <Button
