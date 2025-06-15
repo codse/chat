@@ -1,51 +1,88 @@
 import { api, internal } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
-import { internalMutation, mutation } from '@convex/_generated/server';
+import {
+  internalMutation,
+  mutation,
+  MutationCtx,
+} from '@convex/_generated/server';
 import { v } from 'convex/values';
 import { MessageFields } from './table';
 import { ALLOWED_FILE_TYPES } from '@/utils/uploads';
 import { getAuthUserId } from '@convex-dev/auth/server';
 
+const createTemporaryTitle = (
+  content: string,
+  attachments?: { fileName: string }[]
+) => {
+  return content.slice(0, 50) || attachments?.[0]?.fileName || 'New Chat';
+};
+
+const ensureChat = async (
+  ctx: MutationCtx,
+  args: {
+    chatId?: Id<'chats'>;
+    content: string;
+    attachments?: { fileName: string }[];
+    model?: string;
+    userId?: Id<'users'>;
+  }
+) => {
+  let chatId = args.chatId;
+  let currentModel = args.model;
+
+  const title = createTemporaryTitle(args.content, args.attachments);
+
+  if (!chatId) {
+    chatId = await ctx.runMutation(api.chats.mutations.createChat, {
+      title,
+      model: args.model ?? 'gpt4o',
+    });
+  } else {
+    const chat = await ctx.db.get(chatId as Id<'chats'>);
+    if (!chat || chat.type === 'deleted' || chat.type === 'private') {
+      throw new Error('Chat not found');
+    }
+
+    if (!currentModel) {
+      currentModel = chat.model;
+    }
+
+    if (chat.source === 'share') {
+      if (!args.userId) {
+        throw new Error('User ID is required to clone a shared chat');
+      }
+
+      console.log('Creating a new chat from shared chat', chat._id);
+      // If the user messages in a shared chat, we create a new chat with the same model.
+      chatId = await ctx.runMutation(internal.chats.mutations.cloneChat, {
+        chatId: chat._id,
+        userId: args.userId,
+        title: chat.title,
+        model: currentModel,
+      });
+    }
+  }
+
+  return { chatId, model: currentModel };
+};
+
 export const addMessage = internalMutation({
   args: {
     ...MessageFields,
+    // Needed while cloning messages from a shared chat
+    userId: v.optional(v.id('users')),
     chatId: v.optional(v.id('chats')),
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     if (
       !args.content?.trim().length &&
-      (!args.attachments || args.attachments.length === 0) &&
+      !args.attachments?.length &&
       args.role === 'user'
     ) {
       throw new Error('Content or attachments are required');
     }
 
-    let chatId = args.chatId;
-    let currentModel = args.model;
-    let lastModel: string | undefined;
-    if (!chatId) {
-      const title =
-        args.content?.slice(0, 50) ||
-        args.attachments?.[0]?.fileName ||
-        'New Chat';
-      chatId = await ctx.runMutation(api.chats.mutations.createChat, {
-        title,
-        model: args.model ?? 'gpt4o',
-      });
-    } else {
-      const chat = await ctx.db.get(chatId as Id<'chats'>);
-      if (!chat) {
-        throw new Error('Chat not found');
-      }
-      lastModel = chat.model;
-      if (!currentModel) {
-        currentModel = lastModel;
-      }
-    }
-
-    if (!chatId) {
-      throw new Error('Chat not found');
-    }
+    const { chatId, model: currentModel } = await ensureChat(ctx, args);
 
     if (!currentModel) {
       throw new Error(
@@ -53,7 +90,7 @@ export const addMessage = internalMutation({
       );
     }
 
-    const message = {
+    const message: Omit<Doc<'messages'>, '_id' | '_creationTime'> = {
       chatId,
       role: args.role,
       content: args.content,
@@ -61,13 +98,16 @@ export const addMessage = internalMutation({
       attachments: args.attachments,
       model: currentModel,
       status: args.status,
+      updateTime: Date.now(),
     };
 
     await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
       chatId,
+      model: currentModel,
       lastMessageTime: Date.now(),
     });
 
+    console.log('Inserting message', message);
     const messageId = await ctx.db.insert('messages', message);
 
     if (args.role === 'user') {
@@ -105,29 +145,29 @@ export const sendMessage = mutation({
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     const userId = await getAuthUserId(ctx);
 
-    if (args.attachments) {
-      for (const attachment of args.attachments) {
-        if (!ALLOWED_FILE_TYPES.includes(attachment.fileType)) {
-          const isImage = attachment.fileType.startsWith('image/');
-          if (!isImage) {
-            throw new Error(`File type ${attachment.fileType} is not allowed.`);
-          }
-        }
-      }
-    }
-
-    if (!args.content?.trim().length && !args.attachments?.length) {
-      throw new Error('Content or attachments are required');
-    }
-
+    // We will check permissions later in the addMessage mutation because it this point the chat might not exist yet.
     if (!userId) {
       throw new Error('Not authenticated');
     }
 
-    return await ctx.runMutation(internal.messages.mutations.addMessage, {
+    const attachments = args.attachments ?? [];
+
+    if (!args.content?.trim().length && !attachments.length) {
+      throw new Error('Content or attachments are required');
+    }
+
+    for (const attachment of attachments) {
+      const isImage = attachment.fileType.startsWith('image/');
+      if (!isImage && !ALLOWED_FILE_TYPES.includes(attachment.fileType)) {
+        throw new Error(`File type ${attachment.fileType} is not allowed.`);
+      }
+    }
+
+    return ctx.runMutation(internal.messages.mutations.addMessage, {
       chatId: args.chatId,
       role: 'user',
-      content: (args.content ?? '').trim(),
+      userId,
+      content: String(args.content || '').trim(),
       attachments: args.attachments,
       model: args.model,
       status: 'completed',
@@ -135,7 +175,7 @@ export const sendMessage = mutation({
   },
 });
 
-export const cloneChat = internalMutation({
+export const cloneMessages = internalMutation({
   args: {
     newChatId: v.id('chats'),
     referenceId: v.optional(v.id('messages')),

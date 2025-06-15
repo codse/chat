@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Fragment, Suspense } from 'react';
 import {
   ChatContainerContent,
   ChatContainerRoot,
@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { MessageSkeleton } from './message-skeleton';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
+import { SystemMessage } from './system-message';
 
 const ChatMessage = React.lazy(() => import('./chat-message'));
 
@@ -21,10 +22,12 @@ export function ChatMessages({
   chatId,
   initialMessage,
   className,
+  referenceId,
 }: {
   chatId: string;
   initialMessage?: Doc<'messages'> | null;
   className?: string;
+  referenceId?: Id<'messages'> | null;
 }) {
   const { data } = useSuspenseQuery({
     ...convexQuery(api.messages.queries.getChatMessages, {
@@ -88,17 +91,19 @@ export function ChatMessages({
         <Suspense fallback={<MessageSkeleton />}>
           <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
             {messages.map((message, index) => (
-              <ChatMessage
-                key={message._id}
-                message={message}
-                isLastMessage={index === messages.length - 1}
-                onBranch={() => {
-                  createBranch({
-                    chatId: chatId as Id<'chats'>,
-                    model: message.model,
-                  });
-                }}
-              />
+              <Fragment key={message._id}>
+                <SystemMessage visible={message._id === referenceId} />
+                <ChatMessage
+                  message={message}
+                  isLastMessage={index === messages.length - 1}
+                  onBranch={() => {
+                    createBranch({
+                      chatId: chatId as Id<'chats'>,
+                      model: message.model,
+                    });
+                  }}
+                />
+              </Fragment>
             ))}
           </ChatContainerContent>
         </Suspense>

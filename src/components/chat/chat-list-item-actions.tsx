@@ -20,7 +20,7 @@ export default function ChatListItemActions() {
   const navigate = useNavigate();
 
   const [state, setState] = useState<{
-    chat: Pick<Chat, '_id' | 'title' | 'pinned'>;
+    chat: Pick<Chat, '_id' | 'title' | 'type'>;
     action: 'rename' | 'delete' | 'pin';
   }>();
 
@@ -33,6 +33,7 @@ export default function ChatListItemActions() {
     onSuccess: () => {
       navigate({
         to: '/',
+        replace: true,
       });
     },
   });
@@ -51,7 +52,7 @@ export default function ChatListItemActions() {
   useEffect(() => {
     const _setChat = (
       event: CustomEvent<{
-        chat: Pick<Chat, '_id' | 'title' | 'pinned'>;
+        chat: Pick<Chat, '_id' | 'title' | 'type'>;
         action: 'rename' | 'delete' | 'pin';
       }>
     ) => {

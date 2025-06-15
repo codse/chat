@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from '@tanstack/react-router';
+import { Link, useMatch } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { useChatContext } from '@/components/chat/chat-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -9,6 +9,12 @@ import { Id } from '@convex/_generated/dataModel';
 export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
   const { chat } = useChatContext();
   const isLoading = !chat;
+  const match = useMatch({
+    from: '/share/$chatId',
+    shouldThrow: false,
+  });
+  const isSharedChat = Boolean(match);
+
   return (
     <header className="py-4 w-full border-b border-border sticky z-10 chat-header flex px-4">
       <SidebarTrigger className="size-10" />
@@ -21,7 +27,10 @@ export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
             className="text-foreground no-underline text-base"
             asChild
           >
-            <Link to="/share/$chatId" params={{ chatId: chat._id }}>
+            <Link
+              to={isSharedChat ? '/share/$chatId' : '/chat/$chatId'}
+              params={{ chatId: chat._id }}
+            >
               {chat?.title}
             </Link>
           </Button>

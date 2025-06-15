@@ -37,6 +37,7 @@ export const getChatMessages = query({
 
     const referenceId = chat.referenceId;
     const parentId = chat.parentId;
+
     if (isSharedChat && !chat.backfilled && referenceId && parentId) {
       // Backfilling is not complete, return the original chat upto the referenceId
       const originalStream = stream(ctx.db, convexSchema)
