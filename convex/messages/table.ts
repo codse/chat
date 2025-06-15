@@ -12,7 +12,7 @@ export const messagesTable = defineTable({
         fileId: v.id('_storage'),
         fileName: v.string(),
         fileType: v.string(),
-        fileSize: v.number(),
+        fileSize: v.float64(),
       })
     )
   ),
@@ -32,8 +32,7 @@ export const messagesTable = defineTable({
       v.literal('unknown')
     )
   ),
-  updateTime: v.optional(v.number()),
-  deleteTime: v.optional(v.number()),
+  updateTime: v.optional(v.float64()),
 }).index('by_chat_update_time', ['chatId', 'updateTime']);
 
 export const MessageFields = messagesTable.validator.fields;

@@ -4,6 +4,7 @@ import { internalMutation, mutation } from '@convex/_generated/server';
 import { v } from 'convex/values';
 import { MessageFields } from './table';
 import { ALLOWED_FILE_TYPES } from '@/utils/uploads';
+import { getAuthUserId } from '@convex-dev/auth/server';
 
 export const addMessage = internalMutation({
   args: {
@@ -102,8 +103,7 @@ export const sendMessage = mutation({
     model: MessageFields.model,
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
-    const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-    const userId = user?._id;
+    const userId = await getAuthUserId(ctx);
 
     if (args.attachments) {
       for (const attachment of args.attachments) {

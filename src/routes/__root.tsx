@@ -10,35 +10,15 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import * as React from 'react';
 import { Toaster } from 'sonner';
 import type { QueryClient } from '@tanstack/react-query';
-import appCss from '../styles/app.css?url';
 import { seo } from '@/utils/seo';
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  useAuth,
-} from '@clerk/tanstack-react-start';
-import { createServerFn } from '@tanstack/react-start';
-import { getAuth } from '@clerk/tanstack-react-start/server';
-import { getWebRequest } from '@tanstack/react-start/server';
-import { ConvexReactClient } from 'convex/react';
 import { ConvexQueryClient } from '@convex-dev/react-query';
-import { ConvexProviderWithClerk } from 'convex/react-clerk';
-
-const fetchClerkAuth = createServerFn({ method: 'GET' }).handler(async () => {
-  const auth = await getAuth(getWebRequest() as Request);
-  const token = await auth.getToken({ template: 'convex' });
-
-  return {
-    userId: auth.userId,
-    token,
-  };
-});
+import { ConvexAuthProvider } from '@convex-dev/auth/react';
+import appCss from '@/styles/app.css?url';
+import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
+import { LoginAnonymously } from '@/components/auth/anonymous';
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
-  convexClient: ConvexReactClient;
   convexQueryClient: ConvexQueryClient;
 }>()({
   head: () => ({
@@ -56,7 +36,10 @@ export const Route = createRootRouteWithContext<{
       }),
     ],
     links: [
-      { rel: 'stylesheet', href: appCss },
+      {
+        rel: 'stylesheet',
+        href: appCss,
+      },
       {
         rel: 'apple-touch-icon',
         sizes: '180x180',
@@ -86,47 +69,27 @@ export const Route = createRootRouteWithContext<{
     );
   },
   notFoundComponent: () => <div>Not Found</div>,
-  // beforeLoad: async (ctx) => {
-  //   const time = performance.now();
-  //   const auth = await fetchClerkAuth();
-  //   const { userId, token } = auth;
-
-  //   // During SSR only (the only time serverHttpClient exists),
-  //   // set the Clerk auth token to make HTTP queries with.
-  //   if (token) {
-  //     ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-  //   }
-  //   console.log(`Clerk auth took ${performance.now() - time}ms`);
-
-  //   return {
-  //     userId,
-  //     token,
-  //   };
-  // },
-  // loader: async (ctx) => {
-  //   const time = performance.now();
-  //   const auth = await fetchClerkAuth();
-  //   const { userId, token } = auth;
-  //   console.log(`Clerk auth took ${performance.now() - time}ms`);
-  // },
   component: RootComponent,
 });
 
 function RootComponent() {
-  const { convexClient } = useRouteContext({ from: Route.id });
+  const { convexQueryClient } = useRouteContext({
+    from: Route.id,
+  });
   return (
-    <RootDocument>
-      <ClerkProvider>
-        <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-          <SignedIn>
-            <Outlet />
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal" />
-          </SignedOut>
-        </ConvexProviderWithClerk>
-      </ClerkProvider>
-    </RootDocument>
+    <ConvexAuthProvider client={convexQueryClient.convexClient}>
+      <RootDocument>
+        <AuthLoading>
+          <div className="h-dvh w-full bg-background" />
+        </AuthLoading>
+        <Authenticated>
+          <Outlet />
+        </Authenticated>
+        <Unauthenticated>
+          <LoginAnonymously />
+        </Unauthenticated>
+      </RootDocument>
+    </ConvexAuthProvider>
   );
 }
 
@@ -143,8 +106,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <Toaster />
           </div>
         </div>
-        <ReactQueryDevtools />
-        <TanStackRouterDevtools position="bottom-left" />
         <Scripts />
       </body>
     </html>

@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
-import { Doc, Id } from '@convex/_generated/dataModel';
+import { Doc } from '@convex/_generated/dataModel';
 
 const DefaultCatchBoundary = () => <div>DefaultCatchBoundary</div>;
 const NotFound = () => <div>NotFound</div>;
@@ -19,16 +19,18 @@ export function createRouter() {
     notifyManager.setScheduler(window.requestAnimationFrame);
   }
 
-  const CONVEX_URL = (
-    import.meta as unknown as { env: { VITE_CONVEX_URL?: string } }
-  ).env.VITE_CONVEX_URL;
+  const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
 
   if (!CONVEX_URL) {
     console.error('missing envar CONVEX_URL');
   }
 
-  const convex = new ConvexReactClient(CONVEX_URL!);
-  const convexQueryClient = new ConvexQueryClient(convex);
+  const convex = new ConvexReactClient(CONVEX_URL!, {
+    verbose: true,
+  });
+  const convexQueryClient = new ConvexQueryClient(convex, {
+    verbose: true,
+  });
 
   const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
@@ -43,6 +45,7 @@ export function createRouter() {
       },
     }),
   });
+
   convexQueryClient.connect(queryClient);
 
   const router = routerWithQueryClient(
@@ -53,14 +56,8 @@ export function createRouter() {
       defaultNotFoundComponent: () => <NotFound />,
       context: {
         queryClient,
-        convexClient: convex,
         convexQueryClient,
       },
-      Wrap: ({ children }) => (
-        <ConvexProvider client={convexQueryClient.convexClient}>
-          {children}
-        </ConvexProvider>
-      ),
       scrollRestoration: true,
     }),
     queryClient

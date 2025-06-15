@@ -1,56 +1,8 @@
 import { v } from 'convex/values';
-import { internalMutation, mutation, MutationCtx } from '../_generated/server';
+import { internalMutation, mutation } from '../_generated/server';
 import { internal } from '../_generated/api';
-import { IndexRange } from 'convex/server';
-import { Doc, Id } from '@convex/_generated/dataModel';
-
-function checkChatPermissions(
-  ctx: MutationCtx,
-  chatId: Id<'chats'>
-): Promise<{
-  user: Doc<'users'>;
-  chat: Doc<'chats'>;
-}>;
-
-function checkChatPermissions(
-  ctx: MutationCtx,
-  chatId?: null
-): Promise<{
-  user: Doc<'users'>;
-  chat: null;
-}>;
-
-async function checkChatPermissions(
-  ctx: MutationCtx,
-  chatId: Id<'chats'> | null = null
-) {
-  const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-  const userId = user?._id;
-  if (!userId) {
-    throw new Error('Not authenticated');
-  }
-
-  if (!chatId) {
-    return {
-      user,
-      chat: null,
-    };
-  }
-
-  const chat = await ctx.db.get(chatId);
-  if (!chat) {
-    throw new Error('Chat not found');
-  }
-
-  if (chat.userId !== userId) {
-    throw new Error('Unauthorized');
-  }
-
-  return {
-    user,
-    chat,
-  };
-}
+import { Id } from '@convex/_generated/dataModel';
+import { checkChatPermissions } from './permissions';
 
 export const createChat = mutation({
   args: {
@@ -66,7 +18,12 @@ export const createChat = mutation({
       throw new Error('Model is required');
     }
 
-    const { user } = await checkChatPermissions(ctx);
+    const result = await checkChatPermissions(ctx);
+    if (result.isErr()) {
+      throw result.error;
+    }
+
+    const { user } = result.value;
     const sanitizedTitle = args.title.trim();
 
     const chatId = await ctx.db.insert('chats', {
@@ -109,7 +66,11 @@ export const updateChatTitle = mutation({
       throw new Error('Title is required');
     }
 
-    await checkChatPermissions(ctx, args.chatId);
+    const result = await checkChatPermissions(ctx, args.chatId);
+    if (result.isErr()) {
+      throw result.error;
+    }
+
     const sanitizedTitle = args.title.trim();
 
     await ctx.runMutation(internal.chats.mutations.updateChat, {
@@ -122,28 +83,14 @@ export const updateChatTitle = mutation({
 export const deleteChat = mutation({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    await checkChatPermissions(ctx, args.chatId);
+    const result = await checkChatPermissions(ctx, args.chatId, true);
+    if (result.isErr()) {
+      throw result.error;
+    }
 
-    // Delete all messages in the chat
-    const messages = await ctx.db
-      .query('messages')
-      .withIndex(
-        'by_chat_update_time',
-        (q): IndexRange => q.eq('chatId', args.chatId)
-      )
-      .order('desc')
-      .collect();
-
-    await Promise.all(
-      messages.map((message) =>
-        ctx.db.patch(message._id, {
-          deleteTime: Date.now(),
-        })
-      )
-    );
-
-    // Delete the chat
+    // Mark the chat as deleted. This will be cleared by the cron job.
     await ctx.db.patch(args.chatId, {
+      type: 'deleted',
       deleteTime: Date.now(),
     });
   },
@@ -186,7 +133,12 @@ export const cloneChat = internalMutation({
 export const shareChat = mutation({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    const { chat } = await checkChatPermissions(ctx, args.chatId);
+    const result = await checkChatPermissions(ctx, args.chatId);
+    if (result.isErr()) {
+      throw result.error;
+    }
+
+    const { chat } = result.value;
     const newChatId: Id<'chats'> = await ctx.runMutation(
       internal.chats.mutations.cloneChat,
       {
@@ -205,8 +157,14 @@ export const shareChat = mutation({
 export const branchChat = mutation({
   args: { chatId: v.id('chats'), model: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const { chat } = await checkChatPermissions(ctx, args.chatId);
-    console.log('Branching chat', args.chatId, 'with model', args.model);
+    const result = await checkChatPermissions(ctx, args.chatId);
+    if (result.isErr()) {
+      throw result.error;
+    }
+
+    const { chat } = result.value;
+    console.log(`Branching chat ${args.chatId} with model ${args.model}`);
+
     const newChatId: Id<'chats'> = await ctx.runMutation(
       internal.chats.mutations.cloneChat,
       {
@@ -225,10 +183,14 @@ export const branchChat = mutation({
 export const pinChat = mutation({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    const { chat } = await checkChatPermissions(ctx, args.chatId);
+    const result = await checkChatPermissions(ctx, args.chatId);
+    if (result.isErr()) {
+      throw result.error;
+    }
+    const { chat } = result.value;
 
     await ctx.db.patch(args.chatId, {
-      pinned: chat.pinned ? undefined : true,
+      type: chat.type === 'pinned' ? undefined : 'pinned',
       updateTime: Date.now(),
     });
   },
