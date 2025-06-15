@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 import { internalAction, internalQuery } from '../_generated/server';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { CoreMessage, CoreUserMessage, streamText } from 'ai';
+import { CoreUserMessage, streamText } from 'ai';
 import { internal } from '../_generated/api';
 import { recommendedModelList } from '@/utils/models';
 
