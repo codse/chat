@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
-import { Doc } from '@convex/_generated/dataModel';
+import { Doc, Id } from '@convex/_generated/dataModel';
 
 const DefaultCatchBoundary = () => <div>DefaultCatchBoundary</div>;
 const NotFound = () => <div>NotFound</div>;
@@ -73,6 +73,8 @@ declare module '@tanstack/react-router' {
 
   interface HistoryState {
     message?: Doc<'messages'> | null;
+    // After sending a message in a shared chat, we want to display a system message after this referenceId.
+    referenceId?: Id<'messages'> | null;
     chat?: Pick<Doc<'chats'>, '_id' | 'model' | 'title'> | null;
   }
 }

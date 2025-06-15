@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Fragment, Suspense } from 'react';
 import {
   ChatContainerContent,
   ChatContainerRoot,
@@ -14,6 +14,8 @@ import { cn } from '@/lib/utils';
 import { MessageSkeleton } from './message-skeleton';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
+import { Shield } from 'lucide-react';
+import { Separator } from '../ui/separator';
 
 const ChatMessage = React.lazy(() => import('./chat-message'));
 
@@ -21,10 +23,12 @@ export function ChatMessages({
   chatId,
   initialMessage,
   className,
+  referenceId,
 }: {
   chatId: string;
   initialMessage?: Doc<'messages'> | null;
   className?: string;
+  referenceId?: Id<'messages'> | null;
 }) {
   const { data } = useSuspenseQuery({
     ...convexQuery(api.messages.queries.getChatMessages, {
@@ -88,17 +92,33 @@ export function ChatMessages({
         <Suspense fallback={<MessageSkeleton />}>
           <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
             {messages.map((message, index) => (
-              <ChatMessage
-                key={message._id}
-                message={message}
-                isLastMessage={index === messages.length - 1}
-                onBranch={() => {
-                  createBranch({
-                    chatId: chatId as Id<'chats'>,
-                    model: message.model,
-                  });
-                }}
-              />
+              <Fragment key={message._id}>
+                {referenceId === message._id && (
+                  <div className="w-full flex items-center justify-center gap-2 px-4">
+                    <div className="flex-1" role="presentation">
+                      <Separator className="w-full" />
+                    </div>
+                    <p className="text-xs min-w-fit flex items-center gap-2 text-muted-foreground">
+                      <Shield className="size-4" />
+                      Messages after this point are visible to you only.
+                    </p>
+                    <div className="flex-1" role="presentation">
+                      <Separator className="w-full" />
+                    </div>
+                  </div>
+                )}
+                <ChatMessage
+                  key={message._id}
+                  message={message}
+                  isLastMessage={index === messages.length - 1}
+                  onBranch={() => {
+                    createBranch({
+                      chatId: chatId as Id<'chats'>,
+                      model: message.model,
+                    });
+                  }}
+                />
+              </Fragment>
             ))}
           </ChatContainerContent>
         </Suspense>

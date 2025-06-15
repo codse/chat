@@ -57,6 +57,10 @@ export function ChatInput({
         navigate({
           to: '/chat/$chatId',
           params: { chatId: message.chatId },
+          state: {
+            message,
+            referenceId: message._id,
+          },
         });
       }
     },

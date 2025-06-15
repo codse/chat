@@ -27,6 +27,7 @@ export function ChatView({ chatId }: { chatId: string }) {
           }
           chatId={chatId}
           initialMessage={initialMessage}
+          referenceId={location.state?.referenceId}
         />
       </Suspense>
       <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
