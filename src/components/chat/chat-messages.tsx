@@ -94,7 +94,6 @@ export function ChatMessages({
               <Fragment key={message._id}>
                 <SystemMessage visible={message._id === referenceId} />
                 <ChatMessage
-                  key={message._id}
                   message={message}
                   isLastMessage={index === messages.length - 1}
                   onBranch={() => {

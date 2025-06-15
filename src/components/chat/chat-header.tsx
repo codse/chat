@@ -13,7 +13,7 @@ export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
     from: '/share/$chatId',
     shouldThrow: false,
   });
-  const isSharedChat = Boolean(match?.params.chatId);
+  const isSharedChat = Boolean(match);
 
   return (
     <header className="py-4 w-full border-b border-border sticky z-10 chat-header flex px-4">

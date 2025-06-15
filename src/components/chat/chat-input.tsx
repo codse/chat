@@ -63,7 +63,7 @@ export function ChatInput({
           params: { chatId: message.chatId },
           state: {
             message,
-            fromSharedChat: Boolean(match?.params.chatId),
+            fromSharedChat: Boolean(match),
           },
         });
       }
