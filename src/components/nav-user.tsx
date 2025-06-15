@@ -33,9 +33,6 @@ function UserProfile({ user }: { user: PublicUser }) {
   const { isMobile } = useSidebar();
   const { signOut } = useAuthActions();
   const navigate = useNavigate();
-  const email = user.email?.replace(/@.*$/, '');
-  const domain = user.email?.split('@')[1];
-  const maskedEmail = `${email?.slice(0, 1)}...${email?.slice(-2)}@${domain}`;
 
   return (
     <SidebarMenu>
@@ -55,7 +52,7 @@ function UserProfile({ user }: { user: PublicUser }) {
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {maskedEmail}
+                  {user.email}
                 </span>
               </div>
               <MoreVerticalIcon className="ml-auto size-4" />
@@ -76,7 +73,7 @@ function UserProfile({ user }: { user: PublicUser }) {
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {maskedEmail}
+                    {user.email}
                   </span>
                 </div>
               </div>
