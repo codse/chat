@@ -35,10 +35,14 @@ function LazyLoadChat({ chatId }: { chatId: Id<'chats'> }) {
   });
 
   useEffect(() => {
-    if (user?._id !== null && chat?.userId !== user?._id) {
+    if (
+      user?._id !== null &&
+      chat?.userId !== user?._id &&
+      chat?.source !== 'share'
+    ) {
       navigate({ to: '/', replace: true });
     }
-  }, [user?._id, chat?.userId]);
+  }, [user?._id, chat?.userId, chat?.source]);
 
   return null;
 }

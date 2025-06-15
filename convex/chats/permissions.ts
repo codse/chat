@@ -91,7 +91,7 @@ async function checkChatPermissions(
     return err(new Error('Chat not found'));
   }
 
-  if (chat.userId !== userId) {
+  if (chat.source !== 'share' && chat.userId !== userId) {
     return err(new Error('Unauthorized'));
   }
 

@@ -66,28 +66,3 @@ export const getChat = query({
     return chat;
   },
 });
-
-export const getSharedChat = query({
-  args: {
-    chatId: v.id('chats'),
-    paginationOpts: v.object({
-      numItems: v.number(),
-      cursor: v.union(v.string(), v.null()),
-    }),
-  },
-  handler: async (ctx, args) => {
-    const chat = await ctx.db.get(args.chatId);
-
-    if (!chat || chat.deleteTime) {
-      throw new Error('Chat not found');
-    }
-
-    if (chat.source !== 'share') {
-      throw new Error('Chat is no longer accessible');
-    }
-
-    return {
-      chat,
-    };
-  },
-});

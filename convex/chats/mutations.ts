@@ -102,7 +102,7 @@ export const cloneChat = internalMutation({
     userId: v.id('users'),
     title: v.string(),
     model: v.string(),
-    source: v.union(v.literal('branch'), v.literal('share')),
+    source: v.optional(v.union(v.literal('branch'), v.literal('share'))),
   },
   handler: async (ctx, args) => {
     const lastMessage = await ctx.db
@@ -121,7 +121,7 @@ export const cloneChat = internalMutation({
       source: args.source,
     });
 
-    await ctx.scheduler.runAfter(0, internal.messages.mutations.cloneChat, {
+    await ctx.scheduler.runAfter(0, internal.messages.mutations.cloneMessages, {
       newChatId,
       parentChatId: args.chatId,
     });
