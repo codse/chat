@@ -91,10 +91,7 @@ export default function ChatMessage({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    console.log('Branching chat', message.model);
-                    onBranch();
-                  }}
+                  onClick={onBranch}
                   disabled={isBranching}
                 >
                   <GitBranch />

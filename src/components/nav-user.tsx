@@ -1,5 +1,3 @@
-'use client';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -16,24 +14,28 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { PublicUser } from '@/types/chat';
+import { convexQuery } from '@convex-dev/react-query';
+import { api } from '@convex/_generated/api';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { Link, useNavigate } from '@tanstack/react-router';
 import {
   MoreVerticalIcon,
   UserIcon,
   CreditCardIcon,
   BellIcon,
   LogOutIcon,
+  LogInIcon,
 } from 'lucide-react';
+import { useAuthActions } from '@convex-dev/auth/react';
 
-export function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
+function UserProfile({ user }: { user: PublicUser }) {
   const { isMobile } = useSidebar();
+  const { signOut } = useAuthActions();
+  const navigate = useNavigate();
+  const email = user.email?.replace(/@.*$/, '');
+  const domain = user.email?.split('@')[1];
+  const maskedEmail = `${email?.slice(0, 1)}...${email?.slice(-2)}@${domain}`;
 
   return (
     <SidebarMenu>
@@ -45,13 +47,15 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarImage src={user.image} alt={user.name} />
+                <AvatarFallback className="rounded-lg">
+                  {user.name?.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
+                  {maskedEmail}
                 </span>
               </div>
               <MoreVerticalIcon className="ml-auto size-4" />
@@ -66,13 +70,13 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarImage src={user.image} alt={user.name} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
+                    {maskedEmail}
                   </span>
                 </div>
               </div>
@@ -93,7 +97,13 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() =>
+                signOut().then(() => {
+                  navigate({ to: '/', replace: true });
+                })
+              }
+            >
               <LogOutIcon />
               Log out
             </DropdownMenuItem>
@@ -102,4 +112,27 @@ export function NavUser({
       </SidebarMenuItem>
     </SidebarMenu>
   );
+}
+
+export default function NavUser() {
+  const { data: user } = useSuspenseQuery(
+    convexQuery(api.auth.getCurrentUser, {})
+  );
+
+  if (user.isAnonymous) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link to="/login">
+              <LogInIcon />
+              Login
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  return <UserProfile user={user} />;
 }

@@ -18,18 +18,18 @@ Create a `.env.local` & `.env` file in the root directory with:
 
 ```env
 # .env.local
-CONVEX_DEPLOYMENT=your_deployment_id
-CONVEX_URL=your_convex_url
+CONVEX_DEPLOYMENT=your-deployment-id
+CONVEX_URL=your-convex-url
 ```
 
-```env
-CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
-CLERK_SECRET_KEY=your_clerk_secret_key
+```
+npx convex env set SITE_URL <your-app-url>
+npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
+npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
+npx convex env set OPENROUTER_API_KEY <your-openrouter-api-key>
 ```
 
-1. In `convex` dashboard, set `CLERK_FRONTEND_API_URL` and `OPENROUTER_API_KEY` in the environment variables.
-
-2. Start the development server:
+3. Start the development server:
 ```bash
 pnpm dev
 ```
@@ -51,11 +51,11 @@ The application will be available at `http://localhost:3000`
 - [TanStack Router](https://tanstack.com/router) - Routing
 - [TanStack Query](https://tanstack.com/query) - Data fetching
 - [Convex](https://www.convex.dev/) - Backend
+- [Convex Auth](https://convex.dev/docs/auth) - Authentication
 - [React](https://react.dev/) - UI library
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 - [Lucide](https://lucide.dev/) - Icons
 - [Shadcn UI](https://ui.shadcn.com/) - UI components
 - [Prompt kit](https://www.prompt-kit.com/) - Chat UI
-- [Clerk](https://clerk.com/) - Authentication
 - [OpenRouter](https://openrouter.ai/) - AI API
 - [Vercel AI SDK](https://sdk.vercel.ai/) - AI SDK

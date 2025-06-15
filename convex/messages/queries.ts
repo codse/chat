@@ -1,8 +1,8 @@
 import { query } from '../_generated/server';
 import { v } from 'convex/values';
-import { internal } from '../_generated/api';
 import { mergedStream, stream } from 'convex-helpers/server/stream';
 import convexSchema from '@convex/schema';
+import { getAuthUserId } from '@convex-dev/auth/server';
 
 export const getChatMessages = query({
   args: {
@@ -20,12 +20,12 @@ export const getChatMessages = query({
 
     const isSharedChat = chat.source === 'share';
     if (!isSharedChat) {
-      const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-      if (!user) {
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
         throw new Error('User not found');
       }
 
-      if (chat.userId !== user._id) {
+      if (chat.userId !== userId) {
         throw new Error('Unauthorized');
       }
     }

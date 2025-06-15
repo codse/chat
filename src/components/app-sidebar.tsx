@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ChatList } from '@/components/chat/chat-list';
-import { NavUser } from '@/components/nav-user';
+import NavUser from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -17,10 +17,13 @@ import {
 import { Link } from '@tanstack/react-router';
 import { Edit, SearchIcon } from 'lucide-react';
 import { Suspense } from 'react';
+import { Skeleton } from './ui/skeleton';
 
 const ChatListItemActions = React.lazy(
   () => import('./chat/chat-list-item-actions')
 );
+
+const SideBarUser = React.lazy(() => import('./nav-user'));
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -67,13 +70,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={{
-            name: 'John Doe',
-            email: 'john.doe@example.com',
-            avatar: 'https://github.com/shadcn.png',
-          }}
-        />
+        <Suspense fallback={<Skeleton className="h-8 w-full rounded-sm" />}>
+          <SideBarUser />
+        </Suspense>
       </SidebarFooter>
     </Sidebar>
   );

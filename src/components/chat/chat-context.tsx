@@ -1,5 +1,5 @@
 import { Chat } from '@/types/chat';
-import { convexQuery, useConvexQuery } from '@convex-dev/react-query';
+import { convexQuery } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Id } from '@convex/_generated/dataModel';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
@@ -22,11 +22,23 @@ export const useChatContext = () => {
 };
 
 function LazyLoadChat({ chatId }: { chatId: Id<'chats'> }) {
-  useSuspenseQuery({
+  const navigate = useNavigate();
+
+  const { data: chat } = useSuspenseQuery({
     ...convexQuery(api.chats.queries.getChat, {
       chatId: chatId,
     }),
   });
+
+  const { data: user } = useSuspenseQuery({
+    ...convexQuery(api.auth.getCurrentUser, {}),
+  });
+
+  useEffect(() => {
+    if (user?._id !== null && chat?.userId !== user?._id) {
+      navigate({ to: '/', replace: true });
+    }
+  }, [user?._id, chat?.userId]);
 
   return null;
 }

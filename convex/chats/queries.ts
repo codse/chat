@@ -1,9 +1,10 @@
 import { v } from 'convex/values';
 import { query } from '../_generated/server';
-import { internal } from '@convex/_generated/api';
 import schema from '@convex/schema';
 import { stream } from 'convex-helpers/server/stream';
 import { IndexRange } from 'convex/server';
+import { getUser } from '@convex/auth';
+import { checkChatPermissions } from './permissions';
 
 export const listChats = query({
   args: {
@@ -16,11 +17,11 @@ export const listChats = query({
     ),
   },
   handler: async (ctx, args) => {
-    const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-    const userId = user?._id;
-    if (!userId) {
+    const user = await getUser(ctx);
+    if (!user?._id) {
       return {
-        chats: [],
+        chats: null,
+        error: 'User not found',
         continueCursor: null,
         isDone: true,
         pageStatus: 'done',
@@ -29,11 +30,11 @@ export const listChats = query({
 
     const chatStream = stream(ctx.db, schema)
       .query('chats')
-      .withIndex('by_user_pinned_lastMessageTime', (q): IndexRange => {
+      .withIndex('by_user_type_lastMessageTime', (q): IndexRange => {
         if (args.mode === 'pinned') {
-          return q.eq('userId', userId).eq('pinned', true);
+          return q.eq('userId', user._id).eq('type', 'pinned');
         }
-        return q.eq('userId', userId).eq('pinned', undefined);
+        return q.eq('userId', user._id).eq('type', undefined);
       })
       .order('desc')
       .filterWith(async (chat) => !chat.deleteTime && chat.source !== 'share')
@@ -56,17 +57,12 @@ export const listChats = query({
 export const getChat = query({
   args: { chatId: v.id('chats') },
   handler: async (ctx, args) => {
-    const user = await ctx.runQuery(internal.users.queries.getCurrentUser);
-
-    if (!user) {
-      return null;
+    const result = await checkChatPermissions(ctx, args.chatId);
+    if (result.isErr()) {
+      throw result.error;
     }
 
-    const chat = await ctx.db.get(args.chatId);
-    if (!chat || chat.userId !== user?._id) {
-      return null;
-    }
-
+    const { chat } = result.value;
     return chat;
   },
 });
@@ -90,14 +86,8 @@ export const getSharedChat = query({
       throw new Error('Chat is no longer accessible');
     }
 
-    const sharedBy = await ctx.db
-      .query('users')
-      .withIndex('by_id', (q) => q.eq('_id', chat.userId))
-      .unique();
-
     return {
       chat,
-      sharedBy,
     };
   },
 });
