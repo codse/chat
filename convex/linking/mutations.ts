@@ -1,4 +1,4 @@
-import { mutation } from '@convex/_generated/server';
+import { internalMutation, mutation } from '@convex/_generated/server';
 import { Id } from '@convex/_generated/dataModel';
 import { v } from 'convex/values';
 import { getUser } from '../auth';
@@ -67,5 +67,20 @@ export const linkAccount = mutation({
     );
 
     await ctx.db.delete(sessionId as Id<'linking'>);
+  },
+});
+
+export const clearStaleSessions = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+    const sessions = await ctx.db
+      .query('linking')
+      .withIndex('by_creation_time', (q) =>
+        q.lt('_creationTime', tenMinutesAgo)
+      )
+      .collect();
+
+    await Promise.all(sessions.map((session) => ctx.db.delete(session._id)));
   },
 });

@@ -11,4 +11,12 @@ crons.interval(
   internal.chats.delete.clearDeletedChats
 );
 
+crons.interval(
+  'delete-linking-sessions',
+  {
+    minutes: 10,
+  },
+  internal.linking.mutations.clearStaleSessions
+);
+
 export default crons;
