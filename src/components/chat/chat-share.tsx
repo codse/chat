@@ -3,8 +3,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogClose,
   DialogDescription,
 } from '@/components/ui/dialog';
 import { useState } from 'react';
@@ -13,9 +11,10 @@ import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { Id } from '@convex/_generated/dataModel';
 import { api } from '@convex/_generated/api';
-import { ShareIcon, CheckIcon, ClipboardIcon } from 'lucide-react';
+import { ShareIcon, CheckIcon, ClipboardIcon, Loader2 } from 'lucide-react';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Input } from '../ui/input';
+import { toast } from 'sonner';
 
 export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,9 +23,10 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
 
   const shareChatMutation = useConvexMutation(api.chats.mutations.shareChat);
 
-  const { mutate: shareChat, isPending: isSharing } = useMutation({
+  const { mutate: shareChat, isPending: isCreatingLink } = useMutation({
     mutationFn: shareChatMutation,
     onSuccess: (newChatId: string) => {
+      toast.success('You can now share the link with others.');
       setSharedChatId(newChatId);
     },
   });
@@ -46,9 +46,9 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
     }
   };
 
-  const shareUrl = sharedChatId
-    ? `${window.location.origin}/share/${sharedChatId}`
-    : '';
+  const shareUrl = `${window.location.origin}/share/${sharedChatId || String(chatId).slice(String(chatId).length / 2)}`;
+
+  const Icon = isCopied ? CheckIcon : ClipboardIcon;
 
   return (
     <>
@@ -59,46 +59,40 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Share chat</DialogTitle>
-            {!sharedChatId && (
-              <DialogDescription>
-                This will create a public link to a snapshot of this
-                conversation.
-              </DialogDescription>
-            )}
+            <DialogTitle>Share public link to this chat</DialogTitle>
+            <DialogDescription>
+              Your name, custom instructions, and any conversation you have
+              after sharing will remain private.
+            </DialogDescription>
           </DialogHeader>
-          {sharedChatId ? (
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <Input id="link" defaultValue={shareUrl} readOnly />
-              </div>
-              <Button
-                size="sm"
-                className="px-3"
-                onClick={() => copyToClipboard(shareUrl)}
-              >
-                <span className="sr-only">Copy</span>
-                {isCopied ? (
-                  <CheckIcon className="size-4" />
-                ) : (
-                  <ClipboardIcon className="size-4" />
-                )}
-              </Button>
+          <div className="flex items-center space-x-2">
+            <div className="grid flex-1 gap-2">
+              <Input key={shareUrl} defaultValue={shareUrl} readOnly />
             </div>
-          ) : (
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="ghost">Cancel</Button>
-              </DialogClose>
-              <Button
-                variant="default"
-                onClick={handleShare}
-                disabled={isSharing}
-              >
-                Share
-              </Button>
-            </DialogFooter>
-          )}
+            <Button
+              size="sm"
+              className="px-3"
+              onClick={() => {
+                if (isCreatingLink) {
+                  return;
+                }
+
+                if (sharedChatId) {
+                  copyToClipboard(shareUrl);
+                  return;
+                }
+
+                handleShare();
+              }}
+            >
+              {isCreatingLink ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Icon className="size-4" />
+              )}
+              <span>{sharedChatId ? 'Copy link' : 'Create link'}</span>
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>
