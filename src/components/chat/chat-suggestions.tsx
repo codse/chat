@@ -1,7 +1,8 @@
 import { PromptSuggestion } from '@/components/ui/prompt-suggestion';
 import { cn } from '@/lib/utils';
 import { BookIcon, CodeIcon, PenIcon, SearchIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { kOpenNewChat } from './utils';
 
 const suggestions = {
   create: [
@@ -50,25 +51,40 @@ export function ChatSuggestions({
 }: {
   onSuggestionClick: (suggestion: string) => void;
 }) {
-  const [selectedSuggestion, setSelectedSuggestion] = useState<
+  const [selectedCategory, setSelectedCategory] = useState<
     keyof typeof suggestions | null
   >(null);
 
   const handleSuggestionClick = (suggestion: keyof typeof suggestions) => {
-    setSelectedSuggestion(suggestion);
+    setSelectedCategory(suggestion);
   };
 
-  const options = suggestions[selectedSuggestion ?? 'create'];
+  const options = suggestions[selectedCategory ?? 'create'];
+  const [key, setKey] = useState(0);
+
+  useEffect(() => {
+    const handleOpenNewChat: EventListener = () => {
+      setKey((k) => k + 1);
+    };
+
+    window.addEventListener(kOpenNewChat, handleOpenNewChat);
+    return () => {
+      window.removeEventListener(kOpenNewChat, handleOpenNewChat);
+    };
+  }, []);
 
   return (
-    <div className="flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center">
+    <div
+      className="flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center animate-in fade-in-60 zoom-in-90"
+      key={`suggestions-${key}`}
+    >
       <div className="flex flex-wrap gap-2 px-2">
         {quickActions.map((action) => (
           <PromptSuggestion
             key={action.key}
             onClick={() => handleSuggestionClick(action.key)}
             className={cn({
-              'bg-accent': selectedSuggestion === action.key,
+              'bg-accent': selectedCategory === action.key,
             })}
           >
             {action.icon}

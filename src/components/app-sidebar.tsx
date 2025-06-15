@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { ChatList } from '@/components/chat/chat-list';
-import NavUser from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -12,12 +11,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Edit, SearchIcon } from 'lucide-react';
 import { Suspense } from 'react';
 import { Skeleton } from './ui/skeleton';
+import { openNewChat } from './chat/utils';
 
 const ChatListItemActions = React.lazy(
   () => import('./chat/chat-list-item-actions')
@@ -26,6 +25,23 @@ const ChatListItemActions = React.lazy(
 const SideBarUser = React.lazy(() => import('./nav-user'));
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const navigate = useNavigate();
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === 'o' &&
+        (event.metaKey || event.ctrlKey) &&
+        event.shiftKey
+      ) {
+        event.preventDefault();
+        navigate({ to: '/' });
+        openNewChat();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -33,6 +49,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem className="text-center">
             <Link
               to="/"
+              onClick={openNewChat}
               className="max-w-fit inline-block px-2 py-4 font-bold text-primary"
             >
               Fast Chat
@@ -44,8 +61,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link to="/" preload="intent">
+              <SidebarMenuButton
+                asChild
+                className="text-md h-fit items-center flex  justify-center gap-2 border box-border"
+              >
+                <Link to="/" onClick={openNewChat}>
                   <Edit className="size-4" />
                   New chat
                 </Link>
