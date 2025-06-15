@@ -15,6 +15,7 @@ import { ShareIcon, CheckIcon, ClipboardIcon, Loader2 } from 'lucide-react';
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { Input } from '../ui/input';
 import { toast } from 'sonner';
+import { Constants } from '@/utils/constants';
 
 export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,7 +47,9 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
     }
   };
 
-  const shareUrl = `${window.location.origin}/share/${sharedChatId || String(chatId).slice(String(chatId).length / 2)}`;
+  const shareUrl = Constants.createSharedUrl(
+    sharedChatId || String(chatId).slice(String(chatId).length / 2)
+  );
 
   const Icon = isCopied ? CheckIcon : ClipboardIcon;
 

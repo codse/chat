@@ -3,13 +3,7 @@ import { convexQuery } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Id } from '@convex/_generated/dataModel';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import {
-  createContext,
-  Suspense,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import { createContext, Suspense, useContext, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from '@tanstack/react-router';
 
@@ -66,12 +60,13 @@ export function ChatProvider({
   });
 
   useEffect(() => {
-    if (chat?.deleteTime) {
+    // Should never happen, but just in case.
+    if (chat?.type === 'private' || chat?.type === 'deleted') {
       navigate({
         to: '/',
       });
     }
-  }, [chat?.deleteTime]);
+  }, [chat?.type]);
 
   return (
     <ChatContext.Provider value={{ chat }}>

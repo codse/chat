@@ -12,7 +12,7 @@ import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
 import { recommendedModelList } from '@/utils/models';
-import { useNavigate } from '@tanstack/react-router';
+import { useMatch, useNavigate } from '@tanstack/react-router';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { AttachmentPreview } from './attachment-preview';
 import { ModelSelect } from './model-select';
@@ -47,6 +47,10 @@ export function ChatInput({
     removeAttachment,
     reset: resetFiles,
   } = useFileUpload();
+  const match = useMatch({
+    from: '/share/$chatId',
+    shouldThrow: false,
+  });
 
   const { mutate: sendMessage, isPending } = useMutation({
     mutationFn: useConvexMutation(api.messages.mutations.sendMessage),
@@ -59,7 +63,7 @@ export function ChatInput({
           params: { chatId: message.chatId },
           state: {
             message,
-            referenceId: message._id,
+            fromSharedChat: Boolean(match?.params.chatId),
           },
         });
       }
