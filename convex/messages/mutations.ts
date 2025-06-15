@@ -103,6 +103,7 @@ export const addMessage = internalMutation({
 
     await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
       chatId,
+      model: currentModel,
       lastMessageTime: Date.now(),
     });
 
