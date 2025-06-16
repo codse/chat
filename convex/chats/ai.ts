@@ -255,6 +255,10 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
     let content = '';
     const sources: { url: string; title: string; metadata: string }[] = [];
 
+    // TODO: use text streaming helper from convex to stream to the original client.
+    // This will allow us to stream to the client without having to write to the DB every time.
+    // https://www.npmjs.com/package/@convex-dev/persistent-text-streaming
+
     const stream = streamText({
       ...config,
       messages: [systemMessage, ...messages.filter((m) => m !== null)] as any,

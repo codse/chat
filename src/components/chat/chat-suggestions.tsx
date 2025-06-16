@@ -97,7 +97,7 @@ export function ChatSuggestions({
           <button
             className="flex w-full max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
             key={option}
-            onClick={() => onSuggestionClick(option)}
+            onClick={() => onSuggestionClick(option + ' ')}
           >
             {option}
           </button>

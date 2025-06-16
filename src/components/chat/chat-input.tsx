@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/prompt-input';
 import { Button } from '@/components/ui/button';
 import { ArrowUp, Paperclip, Search, Square } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
@@ -101,6 +101,13 @@ export function ChatInput({
       textInputRef.current?.focus();
     }
   };
+
+  useEffect(() => {
+    if (defaultPrompt?.length && textInputRef.current) {
+      textInputRef.current.selectionStart = textInputRef.current.value.length;
+      textInputRef.current.selectionEnd = textInputRef.current.value.length;
+    }
+  }, [defaultPrompt?.length]);
 
   return (
     <PromptInput

@@ -1,16 +1,22 @@
-import { Model } from '@/utils/models';
+import { Model, ModelCapability } from '@/utils/models';
 import { BYOKKeys } from '@/utils/local-storage';
 
 function isOpenAIModel(model: Model) {
   return model.id.startsWith('openai/');
 }
 
-export function checkFileUploads(model: Model, userKeys?: BYOKKeys) {
-  let supportsFileUploads = model.supports.includes('file');
-  if (!supportsFileUploads) {
+function verifyCapabilityAccess(
+  model: Model,
+  userKeys: BYOKKeys | undefined,
+  feature: ModelCapability
+) {
+  const featureName = feature === 'file' ? 'File upload' : 'Web search';
+  let isSupported = model.supports.includes(feature);
+
+  if (!isSupported) {
     return {
       supported: false,
-      disabledReason: 'File uploads are not supported by this model',
+      disabledReason: `${featureName} is not supported by this model.`,
     };
   }
 
@@ -18,47 +24,27 @@ export function checkFileUploads(model: Model, userKeys?: BYOKKeys) {
   let disabledReason = undefined;
 
   if (isOpenAi && !userKeys?.openai) {
-    supportsFileUploads = false;
-    disabledReason = 'Set up your OpenAI API key to enable file uploads';
+    isSupported = false;
+    disabledReason = `Set up your OpenAI API key to enable ${featureName.toLowerCase()}`;
   }
 
   if (!isOpenAi && !userKeys?.openrouter) {
-    supportsFileUploads = false;
-    disabledReason = 'Set up your OpenRouter API key to enable file uploads';
+    isSupported = false;
+    disabledReason = `Set up your OpenRouter API key to enable ${featureName.toLowerCase()}`;
   }
 
   return {
-    supported: supportsFileUploads,
+    supported: isSupported,
     disabledReason,
   };
 }
 
+export function checkFileUploads(model: Model, userKeys?: BYOKKeys) {
+  return verifyCapabilityAccess(model, userKeys, 'file');
+}
+
 export function checkWebSearch(model: Model, userKeys?: BYOKKeys) {
-  let supportsWebSearch = model.supports.includes('search');
-  if (!supportsWebSearch) {
-    return {
-      supported: false,
-      disabledReason: 'Web search is not supported by this model',
-    };
-  }
-
-  const isOpenAi = isOpenAIModel(model);
-  let disabledReason = undefined;
-
-  if (isOpenAi && !userKeys?.openai) {
-    supportsWebSearch = false;
-    disabledReason = 'Set up your OpenAI API key to enable web search';
-  }
-
-  if (!isOpenAi && !userKeys?.openrouter) {
-    supportsWebSearch = false;
-    disabledReason = 'Set up your OpenRouter API key to enable web search';
-  }
-
-  return {
-    supported: supportsWebSearch,
-    disabledReason,
-  };
+  return verifyCapabilityAccess(model, userKeys, 'search');
 }
 
 export function isModelEnabled(model: Model, userKeys?: BYOKKeys) {

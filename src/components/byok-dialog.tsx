@@ -69,6 +69,7 @@ export default function BYOKDialog({
             <Input
               type="password"
               name="openai"
+              id="openai"
               value={openai}
               onChange={(e) => setOpenai(e.target.value)}
               placeholder="sk-..."
@@ -85,6 +86,7 @@ export default function BYOKDialog({
             <Input
               type="password"
               name="openrouter"
+              id="openrouter"
               value={openrouter}
               onChange={(e) => setOpenrouter(e.target.value)}
               placeholder="..."

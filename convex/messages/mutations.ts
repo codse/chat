@@ -26,7 +26,6 @@ const ensureChat = async (
     attachments?: { fileName: string }[];
     model?: string;
     userId?: Id<'users'>;
-    userKey?: string;
   }
 ) => {
   let chatId = args.chatId;
@@ -247,7 +246,7 @@ export const addFile = internalMutation({
       ...(message.attachments ?? []),
       {
         fileId: args.file.id,
-        fileName: `generated.${args.file.mimeType.split('/')[1]}`,
+        fileName: `generated.${args.file.mimeType.split('/')[1] || 'bin'}`,
         fileType: args.file.mimeType,
       },
     ];
