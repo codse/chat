@@ -79,7 +79,7 @@ export function ChatInput({
         content: input,
         model: modelId,
         attachments,
-        userKeys,
+        userKeys: userKeys.openai || userKeys.openrouter ? userKeys : undefined,
         search: enableSearch && webSearch.supported,
       });
     }
