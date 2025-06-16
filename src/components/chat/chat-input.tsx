@@ -5,18 +5,21 @@ import {
   PromptInputTextarea,
 } from '@/components/ui/prompt-input';
 import { Button } from '@/components/ui/button';
-import { ArrowUp, Paperclip, Search, Square, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowUp, Paperclip, Search, Square } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
-import { recommendedModelList } from '@/utils/models';
 import { useMatch, useNavigate } from '@tanstack/react-router';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { AttachmentPreview } from './attachment-preview';
 import { ModelSelect } from './model-select';
 import { useChatContext } from './chat-context';
+import { LocalStorage } from '@/utils/local-storage';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+import { useModelInfo } from './hooks/use-model-info';
 
 export function ChatInput({
   chatId,
@@ -29,15 +32,13 @@ export function ChatInput({
 }) {
   const navigate = useNavigate();
   const [input, setInput] = useState(defaultPrompt || '');
-  const [modelId, setModelId] = useState<string>(
-    defaultModel || recommendedModelList[0].id
-  );
-  const selectedModel = recommendedModelList.find(
-    (model) => model.id === modelId
-  );
-  const supportsFileUploads = selectedModel?.supports.includes('file');
-  const supportsWebSearch = selectedModel?.supports.includes('search');
+  const [enableSearch, setEnableSearch] = useState(false);
   const { chat } = useChatContext();
+  const { model, fileUploads, webSearch, modelId, setModelId } = useModelInfo(
+    defaultModel,
+    chat?.model
+  );
+  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     attachments,
@@ -72,11 +73,14 @@ export function ChatInput({
 
   const handleSubmit = () => {
     if (input.trim() || attachments.length > 0) {
+      const userKeys = LocalStorage.byok.get();
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
         content: input,
         model: modelId,
         attachments,
+        userKeys,
+        search: enableSearch && webSearch.supported,
       });
     }
   };
@@ -85,6 +89,7 @@ export function ChatInput({
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
       handleFiles(newFiles);
+      textInputRef.current?.focus();
     }
   };
 
@@ -93,14 +98,9 @@ export function ChatInput({
       event.preventDefault();
       const newFiles = Array.from(event.clipboardData.files);
       handleFiles(newFiles);
+      textInputRef.current?.focus();
     }
   };
-
-  useEffect(() => {
-    if (chat?.model) {
-      setModelId(chat.model);
-    }
-  }, [chat?.model]);
 
   return (
     <PromptInput
@@ -118,29 +118,43 @@ export function ChatInput({
       />
 
       <PromptInputTextarea
+        ref={textInputRef}
         autoFocus
         placeholder="Type your message here..."
-        className="text-muted-foreground"
+        className="text-muted-foreground placeholder:text-muted-foreground/50 font-medium"
         onPaste={handlePaste}
       />
 
       <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
         <div className="flex items-center gap-2">
           <ModelSelect
-            label={selectedModel?.name || 'Select model...'}
+            label={model?.name || 'Select model...'}
             onValueChange={(value) => {
               setModelId(value);
             }}
-            showLoading={!!chatId && !chat}
+            showLoading={!!chatId && (!chat || !defaultModel)}
           />
-          <PromptInputAction tooltip="Attach files">
+          <PromptInputAction
+            tooltip={
+              fileUploads.disabledReason
+                ? fileUploads.disabledReason
+                : 'Attach files'
+            }
+          >
             <label htmlFor="file-upload">
               <Button
                 variant="outline"
                 size="icon"
                 asChild
-                disabled={!supportsFileUploads}
-                className="h-8 w-8 rounded-full"
+                disabled={!fileUploads.supported}
+                className={cn('h-8 w-8 rounded-full', {
+                  'cursor-not-allowed opacity-50': fileUploads.disabledReason,
+                })}
+                onClick={() => {
+                  if (fileUploads.disabledReason) {
+                    toast.error(fileUploads.disabledReason);
+                  }
+                }}
               >
                 <span>
                   <Paperclip className="text-primary size-3.5" />
@@ -153,16 +167,35 @@ export function ChatInput({
                 className="hidden"
                 id="file-upload"
                 accept="image/*,text/plain,application/pdf,text/markdown,text/csv,application/json"
-                disabled={isUploading}
+                disabled={isUploading || !fileUploads.supported}
               />
             </label>
           </PromptInputAction>
-          <PromptInputAction tooltip="Search the web">
+          <PromptInputAction
+            tooltip={
+              webSearch.disabledReason
+                ? webSearch.disabledReason
+                : enableSearch
+                  ? 'Disable web search'
+                  : 'Search the web'
+            }
+          >
             <Button
-              variant="outline"
+              variant={
+                enableSearch && webSearch.supported ? 'default' : 'outline'
+              }
               size="icon"
-              disabled={!supportsWebSearch}
-              className="h-8 w-8 rounded-full"
+              className={cn('h-8 w-8 rounded-full', {
+                'cursor-not-allowed opacity-50': webSearch.disabledReason,
+              })}
+              onClick={() => {
+                if (webSearch.disabledReason) {
+                  toast.error(webSearch.disabledReason);
+                  return;
+                }
+
+                setEnableSearch(!enableSearch);
+              }}
             >
               <Search className="size-3.5" />
             </Button>

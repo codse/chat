@@ -10,22 +10,9 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { BYOKStorage } from '@/utils/byok-storage';
+import { LocalStorage } from '@/utils/local-storage';
 import { useAppContext } from '@/context/app-context';
 import { Label } from './ui/label';
-
-export type BYOKKeys = {
-  openai?: string;
-  openrouter?: string;
-};
-
-export function getBYOKKeys(): BYOKKeys {
-  return BYOKStorage.get();
-}
-
-export function clearBYOKKeys() {
-  BYOKStorage.clear();
-}
 
 export default function BYOKDialog({
   open,
@@ -40,7 +27,7 @@ export default function BYOKDialog({
 
   useEffect(() => {
     if (open) {
-      const k = BYOKStorage.get();
+      const k = LocalStorage.byok.get();
       setOpenai(k.openai || '');
       setOpenrouter(k.openrouter || '');
     }
@@ -51,13 +38,13 @@ export default function BYOKDialog({
       openai: openai.trim() || undefined,
       openrouter: openrouter.trim() || undefined,
     };
-    BYOKStorage.set(newKeys);
+    LocalStorage.byok.set(newKeys);
     setUserKeys(newKeys);
     onOpenChange(false);
   };
 
   const clear = () => {
-    BYOKStorage.clear();
+    LocalStorage.byok.clear();
     setUserKeys({});
     setOpenai('');
     setOpenrouter('');

@@ -14,7 +14,7 @@ import { useConvexMutation } from '@convex-dev/react-query';
 import { Chat } from '@/types/chat';
 import { api } from '@convex/_generated/api';
 import { useNavigate } from '@tanstack/react-router';
-import { kSetChat } from './utils';
+import { kSetChat } from './event.utils';
 
 export default function ChatListItemActions() {
   const navigate = useNavigate();

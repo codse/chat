@@ -25,7 +25,7 @@ import {
   PinIcon,
   TrashIcon,
 } from 'lucide-react';
-import { performAction } from './utils';
+import { performAction } from './event.utils';
 import { useState } from 'react';
 import { Input } from '../ui/input';
 

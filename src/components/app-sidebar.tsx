@@ -16,9 +16,9 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { Edit, SearchIcon, KeyRound, BadgeCheck } from 'lucide-react';
 import { Suspense } from 'react';
 import { Skeleton } from './ui/skeleton';
-import { openNewChat } from './chat/utils';
+import { openNewChat } from './chat/event.utils';
 import BYOKDialog from './byok-dialog';
-import { BYOKStorage } from '@/utils/byok-storage';
+import { LocalStorage } from '@/utils/local-storage';
 import { Button } from './ui/button';
 
 const ChatListItemActions = React.lazy(
@@ -50,7 +50,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [navigate]);
 
   React.useEffect(() => {
-    const keys = BYOKStorage.get();
+    const keys = LocalStorage.byok.get();
     setHasKeys(Boolean(keys.openai || keys.openrouter));
   }, [byokOpen]);
 

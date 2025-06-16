@@ -6,7 +6,7 @@ import {
   ReactNode,
   useCallback,
 } from 'react';
-import { BYOKKeys, BYOKStorage } from '@/utils/byok-storage';
+import { LocalStorage, BYOKKeys } from '@/utils/local-storage';
 
 interface AppContextType {
   userKeys: BYOKKeys;
@@ -16,12 +16,12 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [userKeys, _setUserKeys] = useState<BYOKKeys>(BYOKStorage.get());
+  const [userKeys, _setUserKeys] = useState<BYOKKeys>(LocalStorage.byok.get());
 
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
-      if (e.key === BYOKStorage.key) {
-        setUserKeys(BYOKStorage.get());
+      if (e.key === LocalStorage.byok.key) {
+        setUserKeys(LocalStorage.byok.get());
       }
     };
     window.addEventListener('storage', handleStorage);
@@ -29,7 +29,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setUserKeys = useCallback((keys: BYOKKeys) => {
-    BYOKStorage.set(keys);
+    LocalStorage.byok.set(keys);
     _setUserKeys(keys);
   }, []);
 

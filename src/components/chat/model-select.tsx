@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronsUpDownIcon } from 'lucide-react';
+import { ChevronsUpDownIcon, Info } from 'lucide-react';
 import {
   BrainCircuit,
   File,
@@ -23,11 +23,14 @@ import {
 } from '@/components/ui/popover';
 import { recommendedModelList } from '@/utils/models';
 import { Skeleton } from '../ui/skeleton';
+import { useAppContext } from '@/context/app-context';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { isModelEnabled } from './chat.utils';
+import { LocalStorage } from '@/utils/local-storage';
 
 const capabilityIcons = {
   vision: ImageIcon,
   file: File,
-  text: MessageSquareText,
   search: Search,
   reasoning: BrainCircuit,
 };
@@ -35,25 +38,56 @@ const capabilityIcons = {
 function ModelSelectItem({
   model,
   onSelect,
+  disabled,
 }: {
   model: (typeof recommendedModelList)[number];
   onSelect: () => void;
+  disabled?: boolean;
 }) {
   return (
     <CommandItem
       key={model.id}
       value={model.id}
-      className="flex items-start flex-col py-2"
-      onSelect={onSelect}
+      className={`flex items-start flex-col py-2 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      onSelect={() => {
+        if (disabled) {
+          return;
+        }
+
+        onSelect();
+        // Remember user's choice so that we can use it as preferred model in new chat.
+        // However, search params' model will take precedence.
+        LocalStorage.model.set(model.id);
+      }}
     >
-      <span className="font-semibold">{model.name}</span>
+      <h5 className="font-semibold flex items-center justify-between gap-2 w-full">
+        {model.name}
+        {disabled && (
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="size-4 text-yellow-700" />
+            </TooltipTrigger>
+
+            <TooltipContent>
+              <span className="text-xs">
+                {model.id.includes('openai/')
+                  ? 'OpenAI API key required'
+                  : 'OpenRouter API key required'}
+              </span>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </h5>
       <div className="flex gap-2 justify-between flex-1 w-full">
-        <span className="text-muted-foreground text-xs">
-          by {model.provider}
-        </span>
+        <i className="text-muted-foreground text-xs">{model.provider}</i>
         <div className="flex items-center gap-1 ml-auto">
           {model.supports.map((capability) => {
-            const Icon = capabilityIcons[capability];
+            const Icon =
+              capabilityIcons[capability as keyof typeof capabilityIcons];
+            if (!Icon) {
+              return null;
+            }
+
             return <Icon key={capability} className="size-3.5" />;
           })}
         </div>
@@ -72,6 +106,7 @@ export function ModelSelect({
   showLoading?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
+  const { userKeys: byokKeys } = useAppContext();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -97,11 +132,14 @@ export function ModelSelect({
               {recommendedModelList.map((model) => (
                 <ModelSelectItem
                   onSelect={() => {
-                    onValueChange(model.id);
-                    setOpen(false);
+                    if (isModelEnabled(model, byokKeys)) {
+                      onValueChange(model.id);
+                      setOpen(false);
+                    }
                   }}
                   key={model.id}
                   model={model}
+                  disabled={!isModelEnabled(model, byokKeys)}
                 />
               ))}
             </CommandGroup>

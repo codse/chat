@@ -2,7 +2,7 @@ import { PromptSuggestion } from '@/components/ui/prompt-suggestion';
 import { cn } from '@/lib/utils';
 import { BookIcon, CodeIcon, PenIcon, SearchIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { kOpenNewChat } from './utils';
+import { kOpenNewChat } from './event.utils';
 
 const suggestions = {
   create: [
