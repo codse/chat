@@ -342,10 +342,11 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
 
     for (const file of files) {
       const isImage = file.mimeType.startsWith('image/');
+      const data = isImage
+        ? Uint8Array.from(atob(file.base64), c => c.charCodeAt(0))
+        : file.uint8Array;
       const uploadedFile = await ctx.storage.store(
-        new Blob(isImage ? [file.base64] : [file.uint8Array], {
-          type: file.mimeType,
-        })
+        new Blob([data], { type: file.mimeType })
       );
       console.log('Uploaded file', uploadedFile);
 
