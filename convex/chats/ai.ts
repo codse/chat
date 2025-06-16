@@ -347,7 +347,7 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
     for (const file of files) {
       const isImage = file.mimeType.startsWith('image/');
       const data = isImage
-        ? Uint8Array.from(atob(file.base64), c => c.charCodeAt(0))
+        ? Uint8Array.from(Buffer.from(file.base64, 'base64'))
         : file.uint8Array;
       const uploadedFile = await ctx.storage.store(
         new Blob([data], { type: file.mimeType })
