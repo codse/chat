@@ -13,10 +13,13 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Edit, SearchIcon } from 'lucide-react';
+import { Edit, SearchIcon, KeyRound, BadgeCheck } from 'lucide-react';
 import { Suspense } from 'react';
 import { Skeleton } from './ui/skeleton';
-import { openNewChat } from './chat/utils';
+import { openNewChat } from './chat/event.utils';
+import BYOKDialog from './byok-dialog';
+import { LocalStorage } from '@/utils/local-storage';
+import { Button } from './ui/button';
 
 const ChatListItemActions = React.lazy(
   () => import('./chat/chat-list-item-actions')
@@ -26,6 +29,9 @@ const SideBarUser = React.lazy(() => import('./nav-user'));
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const navigate = useNavigate();
+  const [byokOpen, setByokOpen] = React.useState(false);
+  const [hasKeys, setHasKeys] = React.useState(false);
+
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -42,6 +48,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [navigate]);
+
+  React.useEffect(() => {
+    const keys = LocalStorage.byok.get();
+    setHasKeys(Boolean(keys.openai || keys.openrouter));
+  }, [byokOpen]);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -73,7 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton>
+              <SidebarMenuButton className="mt-2">
                 <SearchIcon className="size-4" />
                 Search chats
               </SidebarMenuButton>
@@ -91,7 +102,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Suspense>
       </SidebarContent>
       <SidebarFooter>
-        <Suspense fallback={<Skeleton className="h-8 w-full rounded-sm" />}>
+        <div className="mb-2 flex flex-col gap-2">
+          <Button
+            className="flex py-8 items-center gap-2 px-2 h-unset rounded hover:bg-muted transition text-xs border border-border"
+            onClick={() => setByokOpen(true)}
+            variant="secondary"
+          >
+            {hasKeys ? (
+              <>
+                <BadgeCheck className="size-4 text-green-800" />
+                <span>Manage API keys</span>
+              </>
+            ) : (
+              <>
+                <KeyRound className="size-4" />
+                <span className="text-muted-foreground">Add API keys</span>
+              </>
+            )}
+          </Button>
+          <BYOKDialog open={byokOpen} onOpenChange={setByokOpen} />
+        </div>
+        <Suspense fallback={<Skeleton className="h-12 w-full rounded-sm" />}>
           <SideBarUser />
         </Suspense>
       </SidebarFooter>

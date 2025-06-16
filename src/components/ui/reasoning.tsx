@@ -83,7 +83,7 @@ function ReasoningTrigger({
 
   return (
     <button
-      className={cn('flex cursor-pointer items-center gap-2', className)}
+      className={cn('flex cursor-pointer items-center gap-2 mt-2', className)}
       onClick={() => onOpenChange(!isOpen)}
       {...props}
     >
@@ -136,7 +136,7 @@ function ReasoningContent({
     <div
       ref={contentRef}
       className={cn(
-        'overflow-hidden transition-[max-height] duration-300 ease-out',
+        'overflow-hidden transition-[max-height] duration-300 ease-out mt-2',
         className
       )}
       style={{
@@ -144,7 +144,12 @@ function ReasoningContent({
       }}
       {...props}
     >
-      <div ref={innerRef}>{children}</div>
+      <div
+        ref={innerRef}
+        className="ps-2 ms-2 border-s-2 border-muted [&_p,&_ul]:pt-2 pb-1 mb-1"
+      >
+        {children}
+      </div>
     </div>
   );
 }

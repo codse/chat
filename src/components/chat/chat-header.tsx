@@ -17,8 +17,8 @@ export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
 
   return (
     <header className="py-4 w-full border-b border-border sticky z-10 chat-header flex px-4">
-      <SidebarTrigger className="size-10" />
-      <div className="flex flex-1 items-center gap-2 max-w-[var(--breakpoint-md)] mx-auto justify-between">
+      <SidebarTrigger className="size-10 absolute left-4 top-1/2 -translate-y-1/2" />
+      <div className="flex flex-1 items-center gap-2 max-w-[var(--breakpoint-md)] mx-auto justify-between px-4">
         {isLoading ? (
           <Skeleton className="h-6 w-40 mx-4" />
         ) : (

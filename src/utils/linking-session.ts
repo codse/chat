@@ -1,6 +1,7 @@
-const LINKING_SESSION_KEY = 'linking-session';
+const LINKING_SESSION_KEY = 'chat:linking-session';
 
 export const LinkingSession = {
+  key: LINKING_SESSION_KEY,
   track: (sessionId: string) => {
     localStorage.setItem(LINKING_SESSION_KEY, sessionId);
   },

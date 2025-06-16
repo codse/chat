@@ -1,4 +1,4 @@
-import { useRouterState } from '@tanstack/react-router';
+import { useRouterState, useSearch } from '@tanstack/react-router';
 import { ChatInput } from '@/components/chat/chat-input';
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { Suspense } from 'react';

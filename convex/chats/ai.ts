@@ -1,115 +1,204 @@
 import { v } from 'convex/values';
-import { internalAction, internalQuery } from '../_generated/server';
+import { ActionCtx, internalAction, internalQuery } from '../_generated/server';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { CoreUserMessage, streamText } from 'ai';
+import {
+  CoreUserMessage,
+  streamText,
+  ToolChoice,
+  LanguageModel,
+  ToolSet,
+} from 'ai';
 import { internal } from '../_generated/api';
-import { recommendedModelList } from '@/utils/models';
+import { Model, recommendedModelList } from '@/utils/models';
+import { createOpenAI, openai } from '@ai-sdk/openai';
+import { Id } from '@convex/_generated/dataModel';
 
 export const getMessagesForAI = internalQuery({
-  args: { chatId: v.id('chats') },
-  handler: async (ctx, { chatId }) => {
-    const maxContextMessages = 20;
+  args: { chatId: v.id('chats'), count: v.number() },
+  handler: async (ctx, { chatId, count }) => {
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_chat_update_time', (q) => q.eq('chatId', chatId))
       .order('desc')
-      .take(maxContextMessages);
+      .take(count);
     return messages.reverse();
   },
 });
+
+interface ModelConfig {
+  model: LanguageModel;
+  tools?: ToolSet;
+  toolChoice?: ToolChoice<ToolSet>;
+}
+
+const createModelConfig = (
+  model: Model,
+  userKeys?: { openai?: string; openrouter?: string },
+  options: { search?: boolean } = {}
+): ModelConfig => {
+  if (model.id.startsWith('openai/') && userKeys?.openai) {
+    console.log(`Using user key for OpenAI: (${model.id})`);
+    const modelProvider = createOpenAI({ apiKey: userKeys.openai })(
+      model.id.replace('openai/', '')
+    );
+
+    const config: ModelConfig = {
+      model: modelProvider,
+    };
+
+    if (options.search && model.supports.includes('search')) {
+      config.tools = {
+        web_search_preview: openai.tools.webSearchPreview({
+          searchContextSize: 'medium',
+        }),
+      };
+      config.toolChoice = { type: 'tool', toolName: 'web_search_preview' };
+    }
+
+    return config;
+  }
+
+  if (userKeys?.openrouter) {
+    console.log(`Using user key for OpenRouter: (${model.id})`);
+    const modelProvider = createOpenRouter({ apiKey: userKeys.openrouter })(
+      model.id
+    );
+
+    return {
+      model: modelProvider,
+    };
+  }
+
+  if (model.free) {
+    console.log(`Using free model: (${model.id})`);
+    const modelProvider = createOpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY,
+    })(model.id);
+    return {
+      model: modelProvider,
+    };
+  }
+
+  throw new Error(
+    'API key required for this model. Please add your key in the sidebar'
+  );
+};
+
+const getRecentMessages = async (
+  ctx: ActionCtx,
+  { chatId, count, model }: { chatId: Id<'chats'>; count: number; model: Model }
+) => {
+  const dbMessages = await ctx.runQuery(internal.chats.ai.getMessagesForAI, {
+    chatId,
+    count,
+  });
+  const supportsFileUploads = model?.supports.includes('file');
+  const supportsImages = model?.supports.includes('vision');
+
+  const messages = await Promise.all(
+    dbMessages.map(async (message) => {
+      if (message.role === 'system') {
+        return null;
+      }
+
+      if (
+        !message?.attachments?.length ||
+        (!supportsFileUploads && !supportsImages)
+      ) {
+        return {
+          role: message.role,
+          content: message.content!,
+        };
+      }
+
+      const contentParts: CoreUserMessage['content'] = [
+        { type: 'text', text: message.content! },
+      ];
+
+      for (const attachment of message.attachments) {
+        const buffer = await ctx.storage.get(attachment.fileId);
+        if (!buffer) {
+          continue;
+        }
+
+        const arrayBuffer = await buffer.arrayBuffer();
+
+        if (attachment.fileType.startsWith('image/')) {
+          contentParts.push({
+            type: 'image',
+            image: arrayBuffer,
+            mimeType: attachment.fileType,
+          });
+          continue;
+        }
+
+        if (!supportsFileUploads) {
+          continue;
+        }
+
+        const isPDF = attachment.fileType === 'application/pdf';
+        if (isPDF) {
+          contentParts.push({
+            type: 'file',
+            data: arrayBuffer,
+            mimeType: 'application/pdf',
+            filename: attachment.fileName,
+          });
+        } else {
+          const textDecoder = new TextDecoder();
+          const plainText = textDecoder.decode(arrayBuffer);
+          contentParts.push({
+            type: 'text',
+            text: `
+User uploaded this text file:
+
+<user-uploaded-file-content name="${attachment.fileName}">
+${plainText}
+</user-uploaded-file-content>
+`.trim(),
+          });
+        }
+      }
+
+      return {
+        role: message.role,
+        content: contentParts,
+      };
+    })
+  );
+
+  return messages.filter((m) => m !== null);
+};
 
 export const generateResponse = internalAction({
   args: {
     chatId: v.id('chats'),
     model: v.string(),
+    userKeys: v.optional(
+      v.object({
+        openai: v.optional(v.string()),
+        openrouter: v.optional(v.string()),
+      })
+    ),
+    search: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const openrouter = createOpenRouter({
-      apiKey: process.env.OPENROUTER_API_KEY,
-    });
-
-    const { chatId, model: modelId } = args;
-
-    const dbMessages = await ctx.runQuery(internal.chats.ai.getMessagesForAI, {
-      chatId,
-    });
+    const { chatId, model: modelId, userKeys, search } = args;
     const selectedModel = recommendedModelList.find(
       (model) => model.id === modelId
     );
-    const supportsFileUploads = selectedModel?.supports.includes('file');
-    const supportsImages = selectedModel?.supports.includes('vision');
 
-    const messages = await Promise.all(
-      dbMessages.map(async (message) => {
-        if (message.role === 'system') {
-          return null;
-        }
+    if (!selectedModel) {
+      throw new Error('Model is not supported');
+    }
 
-        if (
-          !message?.attachments?.length ||
-          (!supportsFileUploads && !supportsImages)
-        ) {
-          return {
-            role: message.role,
-            content: message.content!,
-          };
-        }
+    const config = createModelConfig(selectedModel, userKeys, { search });
 
-        const contentParts: CoreUserMessage['content'] = [
-          { type: 'text', text: message.content! },
-        ];
-
-        for (const attachment of message.attachments) {
-          const buffer = await ctx.storage.get(attachment.fileId);
-          if (!buffer) {
-            continue;
-          }
-
-          const arrayBuffer = await buffer.arrayBuffer();
-
-          if (attachment.fileType.startsWith('image/')) {
-            contentParts.push({
-              type: 'image',
-              image: arrayBuffer,
-              mimeType: attachment.fileType,
-            });
-            continue;
-          }
-
-          if (!supportsFileUploads) {
-            continue;
-          }
-
-          const isPDF = attachment.fileType === 'application/pdf';
-          if (isPDF) {
-            contentParts.push({
-              type: 'file',
-              data: arrayBuffer,
-              mimeType: 'application/pdf',
-              filename: attachment.fileName,
-            });
-          } else {
-            const textDecoder = new TextDecoder();
-            const plainText = textDecoder.decode(arrayBuffer);
-            contentParts.push({
-              type: 'text',
-              text: `
-User uploaded this text file:
-
-<user-uploaded-file name="${attachment.fileName}">
-${plainText}
-</user-uploaded-file>
-`.trim(),
-            });
-          }
-        }
-
-        return {
-          role: message.role,
-          content: contentParts,
-        };
-      })
-    );
+    const messages = await getRecentMessages(ctx, {
+      chatId,
+      count: 20,
+      model: selectedModel,
+    });
 
     const systemMessage = {
       role: 'system',
@@ -131,7 +220,6 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
 **Capabilities**:
 - Access to tools for data lookup and transformation when needed
 - Interactive streaming responses for real-time assistance
-- Knowledge cutoff: January 2025
 
 **Context**:
 - Current time: ${new Date().toISOString()}
@@ -165,8 +253,14 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
 
     let reasoning = '';
     let content = '';
+    const sources: { url: string; title: string; metadata: string }[] = [];
+
+    // TODO: use text streaming helper from convex to stream to the original client.
+    // This will allow us to stream to the client without having to write to the DB every time.
+    // https://www.npmjs.com/package/@convex-dev/persistent-text-streaming
+
     const stream = streamText({
-      model: openrouter(modelId),
+      ...config,
       messages: [systemMessage, ...messages.filter((m) => m !== null)] as any,
       onChunk: async (event) => {
         let current = '';
@@ -180,26 +274,23 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
           content += current;
         }
 
-        if (event.chunk.type === 'tool-call-streaming-start') {
-          current = `\n\n${event.chunk.toolName} called\n\n`;
-          content += current;
-        }
-
-        if (event.chunk.type === 'tool-call-delta') {
-          current = `\n\n${event.chunk.toolName} called: ${event.chunk.toolCallId}\n\n`;
-          content += current;
-        }
-
         if (event.chunk.type === 'source') {
-          current = `\n\n${event.chunk.source}\n\n`;
-          content += current;
+          sources.push({
+            url: event.chunk.source.url,
+            title: event.chunk.source.title ?? '',
+            metadata: event.chunk.source.providerMetadata
+              ? JSON.stringify(event.chunk.source.providerMetadata)
+              : '',
+          });
         }
 
-        await ctx.runMutation(internal.messages.mutations.updateMessage, {
-          messageId: message._id,
-          reasoning,
-          content,
-        });
+        if (current) {
+          await ctx.runMutation(internal.messages.mutations.updateMessage, {
+            messageId: message._id,
+            reasoning,
+            content,
+          });
+        }
       },
       onFinish: async (event) => {
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
@@ -214,15 +305,17 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
       },
       onError: async (event) => {
         console.error(event);
-        await ctx.runMutation(internal.messages.mutations.updateMessage, {
-          messageId: message._id,
-          status: 'completed',
-          endReason: 'error',
-        });
-        await ctx.runMutation(internal.chats.mutations.updateChat, {
-          chatId,
-          lastMessageTime: Date.now(),
-        });
+        await Promise.all([
+          ctx.runMutation(internal.messages.mutations.updateMessage, {
+            messageId: message._id,
+            status: 'completed',
+            endReason: 'error',
+          }),
+          ctx.runMutation(internal.chats.mutations.updateChat, {
+            chatId,
+            lastMessageTime: Date.now(),
+          }),
+        ]);
       },
     });
 
@@ -232,6 +325,42 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
       if (done) {
         break;
       }
+    }
+
+    const [steps, files] = await Promise.all([stream.steps, stream.files]);
+
+    await ctx.runMutation(internal.messages.mutations.updateMessage, {
+      messageId: message._id,
+      sources,
+      toolCalls: steps.flatMap((step) =>
+        step.toolResults.map((result) => {
+          return {
+            // @ts-expect-error
+            name: result.toolName,
+            // @ts-expect-error
+            result: JSON.stringify(result.result),
+          };
+        })
+      ),
+    });
+
+    for (const file of files) {
+      const isImage = file.mimeType.startsWith('image/');
+      const data = isImage
+        ? Uint8Array.from(Buffer.from(file.base64, 'base64'))
+        : file.uint8Array;
+      const uploadedFile = await ctx.storage.store(
+        new Blob([data], { type: file.mimeType })
+      );
+      console.log('Uploaded file', uploadedFile);
+
+      await ctx.runMutation(internal.messages.mutations.addFile, {
+        messageId: message._id,
+        file: {
+          id: uploadedFile,
+          mimeType: file.mimeType,
+        },
+      });
     }
   },
 });

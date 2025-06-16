@@ -1,6 +1,7 @@
 import { api, internal } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
 import {
+  internalAction,
   internalMutation,
   mutation,
   MutationCtx,
@@ -69,9 +70,15 @@ const ensureChat = async (
 export const addMessage = internalMutation({
   args: {
     ...MessageFields,
-    // Needed while cloning messages from a shared chat
     userId: v.optional(v.id('users')),
     chatId: v.optional(v.id('chats')),
+    userKeys: v.optional(
+      v.object({
+        openai: v.optional(v.string()),
+        openrouter: v.optional(v.string()),
+      })
+    ),
+    search: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     if (
@@ -107,13 +114,15 @@ export const addMessage = internalMutation({
       lastMessageTime: Date.now(),
     });
 
-    console.log('Inserting message', message);
+    console.log(`Inserting message for chat: ${message.chatId}`);
     const messageId = await ctx.db.insert('messages', message);
 
     if (args.role === 'user') {
       await ctx.scheduler.runAfter(0, internal.chats.ai.generateResponse, {
         chatId,
         model: currentModel,
+        search: args.search,
+        userKeys: args.userKeys,
       });
     }
 
@@ -141,6 +150,13 @@ export const sendMessage = mutation({
     content: MessageFields.content,
     chatId: v.optional(MessageFields.chatId),
     model: MessageFields.model,
+    userKeys: v.optional(
+      v.object({
+        openai: v.optional(v.string()),
+        openrouter: v.optional(v.string()),
+      })
+    ),
+    search: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
     const userId = await getAuthUserId(ctx);
@@ -171,6 +187,8 @@ export const sendMessage = mutation({
       attachments: args.attachments,
       model: args.model,
       status: 'completed',
+      userKeys: args.userKeys,
+      search: args.search,
     });
   },
 });
@@ -182,7 +200,7 @@ export const cloneMessages = internalMutation({
     parentChatId: v.id('chats'),
   },
   handler: async (ctx, args) => {
-    console.log('Cloning chat', args.parentChatId, 'to', args.newChatId);
+    console.log(`Cloning chat ${args.parentChatId} to ${args.newChatId}`);
     const messages = await ctx.db
       .query('messages')
       .withIndex('by_chat_update_time', (q) =>
@@ -190,7 +208,7 @@ export const cloneMessages = internalMutation({
       )
       .order('asc')
       .collect();
-    console.log('Copying messages:', messages.length);
+    console.log(`Copying ${messages.length} messages`);
 
     await Promise.all(
       messages.map(({ _id, _creationTime, ...message }) =>
@@ -206,5 +224,35 @@ export const cloneMessages = internalMutation({
       lastMessageTime: Date.now(),
     });
     console.log(`Copied ${messages.length} messages to chat ${args.newChatId}`);
+  },
+});
+
+export const addFile = internalMutation({
+  args: {
+    messageId: v.id('messages'),
+    file: v.object({
+      id: v.id('_storage'),
+      mimeType: v.string(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const message = await ctx.db.get(args.messageId);
+    if (!message) {
+      console.error('Message not found', args.messageId);
+      return;
+    }
+
+    const attachments = [
+      ...(message.attachments ?? []),
+      {
+        fileId: args.file.id,
+        fileName: `generated.${args.file.mimeType.split('/')[1] || 'bin'}`,
+        fileType: args.file.mimeType,
+      },
+    ];
+
+    await ctx.db.patch(args.messageId, {
+      attachments,
+    });
   },
 });

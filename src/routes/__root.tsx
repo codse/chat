@@ -16,6 +16,7 @@ import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import appCss from '@/styles/app.css?url';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
 import { LoginAnonymously } from '@/components/auth/anonymous';
+import { AppProvider } from '@/context/app-context';
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -83,7 +84,9 @@ function RootComponent() {
           <div className="h-dvh w-full bg-background" />
         </AuthLoading>
         <Authenticated>
-          <Outlet />
+          <AppProvider>
+            <Outlet />
+          </AppProvider>
         </Authenticated>
         <Unauthenticated>
           <LoginAnonymously />
