@@ -325,11 +325,6 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
 
     const [steps, files] = await Promise.all([stream.steps, stream.files]);
 
-    console.log(`Found ${files.length} files`);
-    console.log(`Found ${steps.length} steps`);
-    console.log(`Found ${sources.length} sources`);
-
-    console.log(steps);
     await ctx.runMutation(internal.messages.mutations.updateMessage, {
       messageId: message._id,
       sources,
