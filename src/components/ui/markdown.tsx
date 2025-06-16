@@ -5,8 +5,6 @@ import ReactMarkdown, { Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock, CodeBlockCode } from './code-block';
-import { Button } from './button';
-import { ArrowLeft } from 'lucide-react';
 
 export type MarkdownProps = {
   children: string;
@@ -56,6 +54,18 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
   pre: function PreComponent({ children }) {
     return <>{children}</>;
+  },
+  a: function AComponent({ children, ...props }) {
+    return (
+      <a
+        {...props}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline"
+      >
+        {children}
+      </a>
+    );
   },
 };
 
