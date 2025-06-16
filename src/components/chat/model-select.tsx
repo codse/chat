@@ -1,12 +1,6 @@
 import * as React from 'react';
 import { ChevronsUpDownIcon, Info } from 'lucide-react';
-import {
-  BrainCircuit,
-  File,
-  Search,
-  ImageIcon,
-  MessageSquareText,
-} from 'lucide-react';
+import { BrainCircuit, File, Search, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Command,

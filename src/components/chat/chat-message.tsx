@@ -57,7 +57,7 @@ export default function ChatMessage({
         <AttachmentPreview attachments={message.attachments} preview />
         {isAssistant && (
           <>
-            <div className="rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%] sm:max-w-[75%] w-fit">
+            <div className="rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%]">
               <MessageContent
                 className="bg-transparent leading-normal prose"
                 markdown
