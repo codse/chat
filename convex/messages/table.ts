@@ -12,13 +12,30 @@ export const messagesTable = defineTable({
         fileId: v.id('_storage'),
         fileName: v.string(),
         fileType: v.string(),
-        fileSize: v.float64(),
+        fileSize: v.optional(v.float64()),
       })
     )
   ),
   model: v.optional(v.string()),
   status: v.optional(
     v.union(v.literal('pending'), v.literal('completed'), v.literal('thinking'))
+  ),
+  toolCalls: v.optional(
+    v.array(
+      v.object({
+        name: v.string(),
+        result: v.optional(v.string()),
+      })
+    )
+  ),
+  sources: v.optional(
+    v.array(
+      v.object({
+        url: v.string(),
+        title: v.string(),
+        metadata: v.optional(v.string()),
+      })
+    )
   ),
   endReason: v.optional(
     v.union(
