@@ -64,6 +64,7 @@
     "tailwind-merge": "3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "unenv": "^1.10.0",
+    "use-debounce": "^10.0.5",
     "use-stick-to-bottom": "1.1.1",
     "uuid": "11.1.0",
     "vaul": "1.1.2",
