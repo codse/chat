@@ -58,10 +58,7 @@ export default function ChatMessage({
         {isAssistant && (
           <>
             <div className="rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%]">
-              <MessageContent
-                className="bg-transparent leading-normal prose"
-                markdown
-              >
+              <MessageContent className="bg-transparent" markdown>
                 {message.content}
               </MessageContent>
               {message.endReason === 'error' && (
@@ -120,7 +117,7 @@ export default function ChatMessage({
           </>
         )}
         {!isAssistant && Boolean(message.content?.length) && (
-          <MessageContent className="max-w-[85%] prose self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
+          <MessageContent className="max-w-[85%] prose self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg user-message">
             {message.content}
           </MessageContent>
         )}

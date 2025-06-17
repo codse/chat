@@ -144,7 +144,7 @@ export function ChatInput({
       onValueChange={setInput}
       isLoading={isPending || isUploading}
       onSubmit={handleSubmit}
-      className="w-full backdrop-blur-3xl border-b-0 self-center-safe border-2 shadow-sm focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1 transition-all"
+      className="w-full backdrop-blur-3xl bg-transparent border-b-0 self-center-safe border-2 shadow-sm focus-within:border-primary/20 focus-within:ring-2 focus-within:ring-primary/30 focus-within:ring-offset-1 transition-all"
     >
       <AttachmentPreview
         attachments={attachments}
