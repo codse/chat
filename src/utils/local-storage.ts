@@ -47,26 +47,14 @@ const createSimpleStorage = (key: string) => {
 const InputStorage = createSimpleStorage(INPUT_KEY);
 
 const ModelStorage = createSimpleStorage(MODEL_KEY);
-const CurrentModelStorage = {
-  set: (value: string) => {
-    sessionStorage.setItem(CURRENT_MODEL_KEY, value);
-  },
-  get: () => {
-    return sessionStorage.getItem(CURRENT_MODEL_KEY);
-  },
-  clear: () => {
-    sessionStorage.removeItem(CURRENT_MODEL_KEY);
-  },
-  pull: () => {
-    const value = CurrentModelStorage.get();
-    CurrentModelStorage.clear();
-    return value;
-  },
-};
+const CurrentModelStorage = createSimpleStorage(CURRENT_MODEL_KEY);
 
 export const LocalStorage = {
   byok: BYOKStorage,
+  // Remember user's choice, after they explicitly select a model in the model select.
+  // However, search params' model will take precedence.
   model: ModelStorage,
+  // Preset model on navigation - like form new chat or chat list item.
   currentModel: CurrentModelStorage,
   input: InputStorage,
 } as const;

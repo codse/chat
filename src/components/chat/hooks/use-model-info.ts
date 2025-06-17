@@ -13,7 +13,7 @@ export function useModelInfo(
     initialModel ||
       LocalStorage.currentModel.get() ||
       LocalStorage.model.get() ||
-      recommendedModelList[0].id
+      recommendedModelList[0]?.id
   );
 
   const { userKeys } = useAppContext();

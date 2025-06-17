@@ -165,7 +165,7 @@ function ChatListItemComponent({
         <Link
           to={`/chat/$chatId`}
           params={{ chatId: chat._id }}
-          onClick={() => {
+          onMouseDown={() => {
             LocalStorage.currentModel.set(chat.model);
           }}
           preload="intent"
