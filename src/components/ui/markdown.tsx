@@ -5,6 +5,9 @@ import ReactMarkdown, { Components } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock, CodeBlockCode } from './code-block';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
+import 'katex/dist/katex.min.css';
 
 export type MarkdownProps = {
   children: string;
@@ -79,7 +82,8 @@ const MemoizedMarkdownBlock = memo(
   }) {
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
+        remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={components}
       >
         {content}
@@ -104,7 +108,12 @@ function MarkdownComponent({
   const blocks = useMemo(() => parseMarkdownIntoBlocks(children), [children]);
 
   return (
-    <div className={className}>
+    <div
+      className={cn(
+        'prose leading-relaxed dark:prose-invert max-w-none',
+        className
+      )}
+    >
       {blocks.map((block, index) => (
         <MemoizedMarkdownBlock
           key={`${blockId}-block-${index}`}

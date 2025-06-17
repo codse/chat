@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import { codeToHtml } from 'shiki';
 import { Button } from './button';
-import { Copy, Download } from 'lucide-react';
+import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 export type CodeBlockProps = {

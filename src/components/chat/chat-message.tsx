@@ -58,10 +58,7 @@ export default function ChatMessage({
         {isAssistant && (
           <>
             <div className="rounded-lg p-2 [&:has(pre)]:max-w-full max-w-[85%]">
-              <MessageContent
-                className="bg-transparent leading-normal prose"
-                markdown
-              >
+              <MessageContent className="bg-transparent" markdown>
                 {message.content}
               </MessageContent>
               {message.endReason === 'error' && (
