@@ -60,6 +60,7 @@ export function ChatMessages({
   const navigate = useNavigate();
   const { mutate: createBranch, isPending: isCreatingBranch } = useMutation({
     mutationFn: useConvexMutation(api.chats.mutations.branchChat),
+
     onSuccess: (newChatId?: string) => {
       if (!newChatId) {
         toast.error('Failed to branch chat');
@@ -95,6 +96,7 @@ export function ChatMessages({
                 <ChatMessage
                   message={message}
                   isLastMessage={index === messages.length - 1}
+                  isBranching={isCreatingBranch}
                   onBranch={() => {
                     if (!isCreatingBranch) {
                       createBranch({
