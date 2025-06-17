@@ -66,3 +66,34 @@ export const getChat = query({
     return chat;
   },
 });
+
+export const searchChats = query({
+  args: {
+    query: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getUser(ctx);
+    if (!user?._id) {
+      return [];
+    }
+
+    if (!args.query?.length) {
+      return await ctx.db
+        .query('chats')
+        .withIndex('by_user_type_lastMessageTime', (q) =>
+          q.eq('userId', user._id).eq('type', undefined)
+        )
+        .order('desc')
+        .take(15);
+    }
+
+    const results = await ctx.db
+      .query('chats')
+      .withSearchIndex('search_by_title', (q) =>
+        q.search('title', args.query).eq('userId', user._id)
+      )
+      .filter((q) => q.and(q.neq('type', 'deleted'), q.neq('type', 'private')))
+      .take(15);
+    return results;
+  },
+});

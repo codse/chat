@@ -36,7 +36,7 @@ export const chatsTable = defineTable({
   ])
   .searchIndex('search_by_title', {
     searchField: 'title',
-    filterFields: ['lastMessageTime', 'source'],
+    filterFields: ['userId'],
   });
 
 export const ChatFields = chatsTable.validator.fields;

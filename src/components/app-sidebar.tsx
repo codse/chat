@@ -13,13 +13,14 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { Edit, SearchIcon, KeyRound, BadgeCheck } from 'lucide-react';
+import { Edit, KeyRound, BadgeCheck } from 'lucide-react';
 import { Suspense, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { openNewChat } from './chat/event.utils';
 import BYOKDialog from './byok-dialog';
 import { LocalStorage } from '@/utils/local-storage';
 import { Button } from './ui/button';
+import SidebarSearch from './chat/sidebar-search';
 
 const ChatListItemActions = React.lazy(
   () => import('./chat/chat-list-item-actions')
@@ -96,10 +97,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton className="mt-2">
-                <SearchIcon className="size-4" />
-                Search chats
-              </SidebarMenuButton>
+              <SidebarSearch />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
