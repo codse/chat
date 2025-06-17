@@ -58,7 +58,11 @@ export function ChatMessages({
   const messages = data?.page ?? [];
 
   const navigate = useNavigate();
-  const { mutate: createBranch, isPending: isCreatingBranch } = useMutation({
+  const {
+    mutate: createBranch,
+    isPending: isCreatingBranch,
+    variables: branchVariables,
+  } = useMutation({
     mutationFn: useConvexMutation(api.chats.mutations.branchChat),
 
     onSuccess: (newChatId?: string) => {
@@ -96,12 +100,16 @@ export function ChatMessages({
                 <ChatMessage
                   message={message}
                   isLastMessage={index === messages.length - 1}
-                  isBranching={isCreatingBranch}
+                  isBranching={
+                    isCreatingBranch &&
+                    branchVariables?.messageId === message._id
+                  }
                   onBranch={() => {
                     if (!isCreatingBranch) {
                       createBranch({
                         chatId: chatId as Id<'chats'>,
                         model: message.model,
+                        messageId: message._id,
                       });
                       return;
                     }

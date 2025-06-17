@@ -196,7 +196,7 @@ export const sendMessage = mutation({
 export const cloneMessages = internalMutation({
   args: {
     newChatId: v.id('chats'),
-    referenceId: v.optional(v.id('messages')),
+    referenceId: v.id('messages'),
     parentChatId: v.id('chats'),
   },
   handler: async (ctx, args) => {
@@ -210,17 +210,30 @@ export const cloneMessages = internalMutation({
       .collect();
     console.log(`Copying ${messages.length} messages`);
 
-    await Promise.all(
-      messages.map(({ _id, _creationTime, ...message }) =>
-        ctx.db.insert('messages', {
-          ...message,
-          chatId: args.newChatId,
-        })
-      )
-    );
+    const refIndex = messages.findIndex((m) => m._id === args.referenceId);
+    const messagesToCopy = messages.slice(0, refIndex + 1);
+
+    let updates: Partial<Doc<'chats'>> = {};
+
+    if (messagesToCopy.length) {
+      updates = {
+        model: messagesToCopy[messagesToCopy.length - 1].model,
+      };
+
+      await Promise.all(
+        messagesToCopy.map(({ _id, _creationTime, ...message }) =>
+          ctx.db.insert('messages', {
+            ...message,
+            chatId: args.newChatId,
+          })
+        )
+      );
+    }
+
     await ctx.scheduler.runAfter(0, internal.chats.mutations.updateChat, {
       chatId: args.newChatId,
       backfilled: true,
+      ...updates,
       lastMessageTime: Date.now(),
     });
     console.log(`Copied ${messages.length} messages to chat ${args.newChatId}`);
