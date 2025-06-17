@@ -36,8 +36,8 @@ export function useModelInfo(
     return {
       available:
         selectedModel.free ||
-        userKeys.openrouter ||
-        (userKeys.openai && selectedModel.provider === 'openai'),
+        userKeys?.openrouter ||
+        (userKeys?.openai && selectedModel.provider === 'openai'),
       model: selectedModel,
       fileUploads: checkFileUploads(selectedModel, userKeys),
       webSearch: checkWebSearch(selectedModel, userKeys),
