@@ -83,6 +83,13 @@ export const searchChats = query({
         .withIndex('by_user_type_lastMessageTime', (q) =>
           q.eq('userId', user._id).eq('type', undefined)
         )
+        .filter((q) =>
+          q.and(
+            q.neq('type', 'deleted'),
+            q.neq('type', 'private'),
+            q.neq('source', 'share')
+          )
+        )
         .order('desc')
         .take(15);
     }
