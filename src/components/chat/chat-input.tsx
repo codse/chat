@@ -20,6 +20,7 @@ import { LocalStorage } from '@/utils/local-storage';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useModelInfo } from './hooks/use-model-info';
+import { useDebounce } from 'use-debounce';
 
 export function ChatInput({
   chatId,
@@ -31,7 +32,9 @@ export function ChatInput({
   defaultModel?: string;
 }) {
   const navigate = useNavigate();
-  const [input, setInput] = useState(defaultPrompt || '');
+  const [input, setInput] = useState(
+    defaultPrompt || LocalStorage.input.get(chatId) || ''
+  );
   const [enableSearch, setEnableSearch] = useState(false);
   const { chat } = useChatContext();
   const { model, fileUploads, webSearch, modelId, setModelId } = useModelInfo(
@@ -73,6 +76,7 @@ export function ChatInput({
 
   const handleSubmit = () => {
     if (input.trim() || attachments.length > 0) {
+      LocalStorage.input.set('', chatId);
       const userKeys = LocalStorage.byok.get();
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
@@ -108,6 +112,15 @@ export function ChatInput({
       textInputRef.current.selectionEnd = textInputRef.current.value.length;
     }
   }, [defaultPrompt?.length]);
+
+  const [debouncedInput] = useDebounce(input, 250, {
+    maxWait: 1000,
+    trailing: true,
+  });
+
+  useEffect(() => {
+    LocalStorage.input.set(debouncedInput, chatId);
+  }, [debouncedInput, chatId]);
 
   return (
     <PromptInput

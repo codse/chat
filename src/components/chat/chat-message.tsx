@@ -37,7 +37,7 @@ export default function ChatMessage({
       className={cn({
         'justify-end': message.role === 'user',
         'justify-start': message.role === 'assistant',
-        'min-h-[calc(100dvh-125px-var(--vh-offset))]': isLastMessage,
+        'min-h-[calc(100dvh-280px)]': isLastMessage,
       })}
     >
       <div

@@ -15,8 +15,7 @@ import { MessageSkeleton } from './message-skeleton';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { SystemMessage } from './system-message';
-
-const ChatMessage = React.lazy(() => import('./chat-message'));
+import ChatMessage from './chat-message';
 
 export function ChatMessages({
   chatId,
@@ -59,8 +58,9 @@ export function ChatMessages({
   const messages = data?.page ?? [];
 
   const navigate = useNavigate();
-  const { mutate: createBranch } = useMutation({
+  const { mutate: createBranch, isPending: isCreatingBranch } = useMutation({
     mutationFn: useConvexMutation(api.chats.mutations.branchChat),
+
     onSuccess: (newChatId?: string) => {
       if (!newChatId) {
         toast.error('Failed to branch chat');
@@ -96,11 +96,15 @@ export function ChatMessages({
                 <ChatMessage
                   message={message}
                   isLastMessage={index === messages.length - 1}
+                  isBranching={isCreatingBranch}
                   onBranch={() => {
-                    createBranch({
-                      chatId: chatId as Id<'chats'>,
-                      model: message.model,
-                    });
+                    if (!isCreatingBranch) {
+                      createBranch({
+                        chatId: chatId as Id<'chats'>,
+                        model: message.model,
+                      });
+                      return;
+                    }
                   }}
                 />
               </Fragment>
