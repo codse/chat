@@ -56,10 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   useEffect(() => {
     const preload = async () => {
-      await Promise.allSettled([
-        import('./chat/chat-message'),
-        import('./chat/chat-messages'),
-      ]);
+      await import('./chat/chat-view');
     };
 
     if ('requestIdleCallback' in window) {
