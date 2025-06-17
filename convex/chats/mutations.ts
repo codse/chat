@@ -103,19 +103,28 @@ export const cloneChat = internalMutation({
     title: v.string(),
     model: v.string(),
     source: v.optional(v.union(v.literal('branch'), v.literal('share'))),
+    referenceId: v.optional(v.id('messages')),
   },
   handler: async (ctx, args) => {
-    const lastMessage = await ctx.db
-      .query('messages')
-      .withIndex('by_chat_update_time', (q) => q.eq('chatId', args.chatId))
-      .order('desc')
-      .first();
+    let refId = args.referenceId;
+    if (!refId) {
+      const lastMessage = await ctx.db
+        .query('messages')
+        .withIndex('by_chat_update_time', (q) => q.eq('chatId', args.chatId))
+        .order('desc')
+        .first();
+      refId = lastMessage?._id;
+    }
+
+    if (!refId) {
+      throw new Error('No reference message found');
+    }
 
     const newChatId = await ctx.db.insert('chats', {
       title: args.title,
       userId: args.userId,
       model: args.model,
-      referenceId: lastMessage?._id,
+      referenceId: refId,
       parentId: args.chatId,
       updateTime: Date.now(),
       source: args.source,
@@ -123,6 +132,7 @@ export const cloneChat = internalMutation({
 
     await ctx.scheduler.runAfter(0, internal.messages.mutations.cloneMessages, {
       newChatId,
+      referenceId: refId,
       parentChatId: args.chatId,
     });
 
@@ -155,7 +165,11 @@ export const shareChat = mutation({
 });
 
 export const branchChat = mutation({
-  args: { chatId: v.id('chats'), model: v.optional(v.string()) },
+  args: {
+    chatId: v.id('chats'),
+    model: v.optional(v.string()),
+    messageId: v.id('messages'),
+  },
   handler: async (ctx, args) => {
     const result = await checkChatPermissions(ctx, args.chatId);
     if (result.isErr()) {
@@ -163,7 +177,16 @@ export const branchChat = mutation({
     }
 
     const { chat } = result.value;
-    console.log(`Branching chat ${args.chatId} with model ${args.model}`);
+    console.log(
+      `Branching chat ${args.chatId} with model ${args.model} and message ${args.messageId}`
+    );
+    const message = await ctx.db
+      .query('messages')
+      .withIndex('by_id', (q) => q.eq('_id', args.messageId))
+      .first();
+    if (!message || message.chatId !== args.chatId) {
+      throw new Error('Message not found');
+    }
 
     const newChatId: Id<'chats'> = await ctx.runMutation(
       internal.chats.mutations.cloneChat,
@@ -173,6 +196,7 @@ export const branchChat = mutation({
         title: chat.title,
         source: 'branch',
         model: args.model ?? chat.model,
+        referenceId: message._id,
       }
     );
 
