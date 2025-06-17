@@ -99,7 +99,13 @@ export const searchChats = query({
       .withSearchIndex('search_by_title', (q) =>
         q.search('title', args.query).eq('userId', user._id)
       )
-      .filter((q) => q.and(q.neq('type', 'deleted'), q.neq('type', 'private')))
+      .filter((q) =>
+        q.and(
+          q.neq('type', 'deleted'),
+          q.neq('type', 'private'),
+          q.neq('source', 'share')
+        )
+      )
       .take(15);
     return results;
   },

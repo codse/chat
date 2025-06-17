@@ -20,9 +20,12 @@ export default function SidebarSearch() {
   const [query, setQuery] = React.useState('');
   const [debouncedQuery] = useDebounce(query, 200);
 
-  const { data, isFetching } = useQuery(
-    convexQuery(api.chats.queries.searchChats, { query: debouncedQuery.trim() })
-  );
+  const { data, isFetching } = useQuery({
+    ...convexQuery(api.chats.queries.searchChats, {
+      query: debouncedQuery.trim(),
+    }),
+    enabled: open,
+  });
 
   return (
     <>
