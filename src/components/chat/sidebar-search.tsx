@@ -35,7 +35,7 @@ export default function SidebarSearch() {
         onOpenChange={setOpen}
         title="Search chats"
         description="Find your chats by title."
-        className="min-h-64"
+        className="h-64"
       >
         <CommandInput
           placeholder="Search chats..."
@@ -43,9 +43,9 @@ export default function SidebarSearch() {
           onValueChange={setQuery}
           autoFocus
         />
-        <CommandList>
+        <CommandList className="p-4">
           <CommandEmpty>
-            {isFetching ? (
+            {isFetching && !data?.length ? (
               <div className="flex items-center gap-2 justify-center w-full">
                 <Loader2 className="size-4 animate-spin" />
                 <span>Searching...</span>
@@ -62,7 +62,7 @@ export default function SidebarSearch() {
                 setOpen(false);
               }}
               asChild
-              className="flex items-center gap-2 rounded-none bg-white"
+              className="flex items-center gap-2 bg-white transition-all"
             >
               <Link to={`/chat/$chatId`} params={{ chatId: chat._id }}>
                 <span className="truncate flex-1">{chat.title}</span>

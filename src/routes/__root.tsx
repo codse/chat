@@ -106,7 +106,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <div className="h-svh flex flex-col min-h-0">
           <div className="flex-grow min-h-0 h-full relative flex flex-col">
             {children}
-            <Toaster />
+            <Toaster richColors />
           </div>
         </div>
         <ReactQueryDevtools buttonPosition="top-left" />
