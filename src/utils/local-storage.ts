@@ -29,12 +29,17 @@ const createSimpleStorage = (key: string) => {
   return {
     key,
     get: (suffix?: string) => {
-      return localStorage.getItem(key + (suffix || ''));
+      const trackingKey = [key, suffix].filter(Boolean).join(':');
+      return localStorage.getItem(trackingKey) || undefined;
     },
     set: (value: string, suffix?: string) => {
-      localStorage.setItem(key + (suffix || ''), value);
+      const trackingKey = [key, suffix].filter(Boolean).join(':');
+      localStorage.setItem(trackingKey, value);
     },
-    clear: (suffix?: string) => localStorage.removeItem(key + (suffix || '')),
+    clear: (suffix?: string) => {
+      const trackingKey = [key, suffix].filter(Boolean).join(':');
+      localStorage.removeItem(trackingKey);
+    },
   };
 };
 
