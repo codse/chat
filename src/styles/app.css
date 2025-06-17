@@ -62,7 +62,9 @@
   --popover: var(--card);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.68 0.22 285);
+  --primary: oklch(0.55 0.25 285);
+  --primary-light: oklch(0.55 0.25 285 / 0.05);
+  --primary-dark: oklch(0 0.25 285);
   --primary-foreground: oklch(1 0 0);
 
   --secondary: oklch(0.96 0.04 240);
@@ -112,6 +114,8 @@
 
   --primary: oklch(0.78 0.2 285);
   --primary-foreground: oklch(0.15 0.01 280);
+  --primary-light: oklch(0.78 0.2 285 / 0.1);
+  --primary-dark: oklch(0.78 0.2 285 / 0.8);
 
   --secondary: oklch(0.3 0.02 240);
   --secondary-foreground: oklch(0.95 0.005 240);
@@ -197,4 +201,17 @@
 
 .prose > :last-child {
   margin-bottom: 0;
+}
+
+.prose strong {
+  @apply font-semibold;
+  color: var(--primary-dark);
+}
+
+.prose {
+  color: var(--primary-dark);
+}
+
+.user-message {
+  background-color: var(--primary-light);
 }

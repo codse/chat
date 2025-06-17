@@ -117,7 +117,7 @@ export default function ChatMessage({
           </>
         )}
         {!isAssistant && Boolean(message.content?.length) && (
-          <MessageContent className="max-w-[85%] prose self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg text-foreground/95">
+          <MessageContent className="max-w-[85%] prose self-end sm:max-w-[75%] w-fit bg-foreground/5 p-4 border border-foreground/10 rounded-lg user-message">
             {message.content}
           </MessageContent>
         )}
