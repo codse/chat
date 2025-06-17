@@ -165,7 +165,7 @@ type PromptInputActionProps = {
 function PromptInputAction({
   tooltip,
   children,
-  className,
+  className = 'max-w-2xs',
   side = 'top',
   ...props
 }: PromptInputActionProps) {

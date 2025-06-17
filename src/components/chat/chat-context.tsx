@@ -11,7 +11,7 @@ export const ChatContext = createContext<{
   chat?: Chat | null;
 }>({});
 
-export const useChatContext = () => {
+export const useLazyChatContext = () => {
   return useContext(ChatContext);
 };
 

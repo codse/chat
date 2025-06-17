@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { SystemMessage } from './system-message';
 import ChatMessage from './chat-message';
+import { LocalStorage } from '@/utils/local-storage';
 
 export function ChatMessages({
   chatId,
@@ -69,6 +70,9 @@ export function ChatMessages({
       if (!newChatId) {
         toast.error('Failed to branch chat');
         return;
+      }
+      if (branchVariables?.model) {
+        LocalStorage.currentModel.set(branchVariables.model);
       }
 
       navigate({

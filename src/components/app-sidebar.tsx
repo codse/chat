@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Edit, SearchIcon, KeyRound, BadgeCheck } from 'lucide-react';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { openNewChat } from './chat/event.utils';
 import BYOKDialog from './byok-dialog';
@@ -53,6 +53,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const keys = LocalStorage.byok.get();
     setHasKeys(Boolean(keys.openai || keys.openrouter));
   }, [byokOpen]);
+
+  useEffect(() => {
+    const preload = async () => {
+      await Promise.allSettled([
+        import('./chat/chat-message'),
+        import('./chat/chat-messages'),
+      ]);
+    };
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(preload);
+    } else {
+      setTimeout(preload, 1000);
+    }
+  }, []);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

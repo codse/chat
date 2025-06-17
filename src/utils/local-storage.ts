@@ -1,6 +1,7 @@
 export const BYOK_KEY = 'chat:byok-keys';
 export const MODEL_KEY = 'chat:model';
 export const INPUT_KEY = 'chat:draft-input';
+const CURRENT_MODEL_KEY = 'chat:current-model';
 
 export type BYOKKeys = {
   openai?: string;
@@ -46,9 +47,26 @@ const createSimpleStorage = (key: string) => {
 const InputStorage = createSimpleStorage(INPUT_KEY);
 
 const ModelStorage = createSimpleStorage(MODEL_KEY);
+const CurrentModelStorage = {
+  set: (value: string) => {
+    sessionStorage.setItem(CURRENT_MODEL_KEY, value);
+  },
+  get: () => {
+    return sessionStorage.getItem(CURRENT_MODEL_KEY);
+  },
+  clear: () => {
+    sessionStorage.removeItem(CURRENT_MODEL_KEY);
+  },
+  pull: () => {
+    const value = CurrentModelStorage.get();
+    CurrentModelStorage.clear();
+    return value;
+  },
+};
 
 export const LocalStorage = {
   byok: BYOKStorage,
   model: ModelStorage,
+  currentModel: CurrentModelStorage,
   input: InputStorage,
 } as const;

@@ -49,9 +49,6 @@ function ModelSelectItem({
         }
 
         onSelect();
-        // Remember user's choice so that we can use it as preferred model in new chat.
-        // However, search params' model will take precedence.
-        LocalStorage.model.set(model.id);
       }}
     >
       <h5 className="font-semibold flex items-center justify-between gap-2 w-full">

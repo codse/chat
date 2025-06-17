@@ -1,4 +1,4 @@
-import { useRouterState, useSearch } from '@tanstack/react-router';
+import { useRouterState } from '@tanstack/react-router';
 import { ChatInput } from '@/components/chat/chat-input';
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { Suspense } from 'react';
@@ -10,8 +10,6 @@ import { ChatHeader } from '@/components/chat/chat-header';
 export function ChatView({ chatId }: { chatId: string }) {
   const { location, isLoading, isTransitioning } = useRouterState();
   const initialMessage = location.state?.message;
-  const chat = location.state?.chat;
-  const model = chat?.model || initialMessage?.model;
 
   return (
     <ChatProvider
@@ -33,7 +31,7 @@ export function ChatView({ chatId }: { chatId: string }) {
         />
       </Suspense>
       <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
-        <ChatInput chatId={chatId} defaultModel={model} />
+        <ChatInput chatId={chatId} />
       </div>
     </ChatProvider>
   );

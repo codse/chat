@@ -1,13 +1,13 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Link, useMatch } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { useChatContext } from '@/components/chat/chat-context';
+import { useLazyChatContext } from '@/components/chat/chat-context';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import ChatShare from '@/components/chat/chat-share';
 import { Id } from '@convex/_generated/dataModel';
 
 export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
-  const { chat } = useChatContext();
+  const { chat } = useLazyChatContext();
   const isLoading = !chat;
   const match = useMatch({
     from: '/share/$chatId',
