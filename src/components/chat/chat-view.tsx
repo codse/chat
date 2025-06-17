@@ -26,7 +26,7 @@ export function ChatView({ chatId }: { chatId: string }) {
           chatId={chatId}
           initialMessage={initialMessage}
           referenceId={
-            location.state.fromSharedChat ? initialMessage?._id : undefined
+            location.state?.fromSharedChat ? initialMessage?._id : undefined
           }
         />
       </Suspense>
