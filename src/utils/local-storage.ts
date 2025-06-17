@@ -1,6 +1,7 @@
 export const BYOK_KEY = 'chat:byok-keys';
 export const MODEL_KEY = 'chat:model';
 export const INPUT_KEY = 'chat:draft-input';
+const CURRENT_MODEL_KEY = 'chat:current-model';
 
 export type BYOKKeys = {
   openai?: string;
@@ -46,9 +47,14 @@ const createSimpleStorage = (key: string) => {
 const InputStorage = createSimpleStorage(INPUT_KEY);
 
 const ModelStorage = createSimpleStorage(MODEL_KEY);
+const CurrentModelStorage = createSimpleStorage(CURRENT_MODEL_KEY);
 
 export const LocalStorage = {
   byok: BYOKStorage,
+  // Remember user's choice, after they explicitly select a model in the model select.
+  // However, search params' model will take precedence.
   model: ModelStorage,
+  // Preset model on navigation - like form new chat or chat list item.
+  currentModel: CurrentModelStorage,
   input: InputStorage,
 } as const;

@@ -75,6 +75,5 @@ declare module '@tanstack/react-router' {
     message?: Doc<'messages'> | null;
     // After sending a message in a shared chat, we want to display a system message after the message?.id.
     fromSharedChat?: boolean;
-    chat?: Pick<Doc<'chats'>, '_id' | 'model' | 'title'> | null;
   }
 }

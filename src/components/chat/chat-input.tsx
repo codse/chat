@@ -15,7 +15,7 @@ import { useMatch, useNavigate } from '@tanstack/react-router';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import { AttachmentPreview } from './attachment-preview';
 import { ModelSelect } from './model-select';
-import { useChatContext } from './chat-context';
+import { useLazyChatContext } from './chat-context';
 import { LocalStorage } from '@/utils/local-storage';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -25,22 +25,20 @@ import { useDebounce } from 'use-debounce';
 export function ChatInput({
   chatId,
   defaultPrompt,
-  defaultModel,
+  initialModel,
 }: {
   chatId?: string;
   defaultPrompt?: string;
-  defaultModel?: string;
+  initialModel?: string | null;
 }) {
   const navigate = useNavigate();
   const [input, setInput] = useState(
     defaultPrompt || LocalStorage.input.get(chatId) || ''
   );
   const [enableSearch, setEnableSearch] = useState(false);
-  const { chat } = useChatContext();
-  const { model, fileUploads, webSearch, modelId, setModelId } = useModelInfo(
-    defaultModel,
-    chat?.model
-  );
+  const { chat } = useLazyChatContext();
+  const { model, fileUploads, webSearch, modelId, setModelId, available } =
+    useModelInfo(initialModel, chat?.model);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   const {
@@ -72,11 +70,25 @@ export function ChatInput({
         });
       }
     },
+    onError: (error) => {
+      toast.error(
+        `Failed to send message.\n\n${error.message || 'Unknown error'}`
+      );
+      console.error(error);
+    },
   });
 
   const handleSubmit = () => {
     if (input.trim() || attachments.length > 0) {
-      LocalStorage.input.set('', chatId);
+      if (!available) {
+        toast.error(
+          'Model is not available. Please select a different model or set your API keys in the sidebar.'
+        );
+        return;
+      }
+
+      LocalStorage.input.clear(chatId);
+      LocalStorage.currentModel.set(modelId);
       const userKeys = LocalStorage.byok.get();
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
@@ -119,7 +131,11 @@ export function ChatInput({
   });
 
   useEffect(() => {
-    LocalStorage.input.set(debouncedInput, chatId);
+    if (debouncedInput.length) {
+      LocalStorage.input.set(debouncedInput, chatId);
+    } else {
+      LocalStorage.input.clear(chatId);
+    }
   }, [debouncedInput, chatId]);
 
   return (
@@ -152,7 +168,7 @@ export function ChatInput({
             onValueChange={(value) => {
               setModelId(value);
             }}
-            showLoading={!!chatId && (!chat || !defaultModel)}
+            showLoading={!!chatId && !chat && !initialModel}
           />
           <PromptInputAction
             tooltip={
@@ -223,12 +239,18 @@ export function ChatInput({
         </div>
 
         <PromptInputAction
-          tooltip={isPending || isUploading ? 'Processing...' : 'Send message'}
+          tooltip={
+            !available
+              ? 'Model is not available. Please select a different model or set your API keys in the sidebar.'
+              : 'Send message'
+          }
         >
           <Button
             variant="default"
             size="icon"
-            className="h-8 w-8 rounded-full me-1"
+            className={cn('h-8 w-8 rounded-full me-1', {
+              'cursor-not-allowed opacity-50': !available,
+            })}
             onClick={handleSubmit}
             disabled={isPending || isUploading}
           >

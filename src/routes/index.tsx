@@ -44,7 +44,7 @@ function Chat() {
               key={selectedSuggestion}
               // If the model is set in the search params, use it
               // Otherwise, use the model from the local storage
-              defaultModel={searchParams?.model || LocalStorage.model.get()}
+              initialModel={searchParams?.model || LocalStorage.model.get()}
             />
           </div>
         </div>

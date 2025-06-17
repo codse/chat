@@ -21,6 +21,7 @@ import {
 import { performAction } from './event.utils';
 import { memo, useState } from 'react';
 import { Input } from '../ui/input';
+import { LocalStorage } from '@/utils/local-storage';
 
 function ChatListItemRename({
   chat,
@@ -164,7 +165,11 @@ function ChatListItemComponent({
         <Link
           to={`/chat/$chatId`}
           params={{ chatId: chat._id }}
-          state={{ chat }}
+          onMouseDown={() => {
+            LocalStorage.currentModel.set(chat.model);
+          }}
+          preload="intent"
+          preloadDelay={150}
           className="w-full text-sm px-0 py-0"
         >
           {isEditing ? (
