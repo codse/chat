@@ -72,6 +72,11 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
 };
 
+const plugins = {
+  remark: [remarkGfm, remarkBreaks, remarkMath],
+  rehype: [rehypeKatex],
+};
+
 const MemoizedMarkdownBlock = memo(
   function MarkdownBlock({
     content,
@@ -82,8 +87,8 @@ const MemoizedMarkdownBlock = memo(
   }) {
     return (
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={plugins.remark}
+        rehypePlugins={plugins.rehype}
         components={components}
       >
         {content}
