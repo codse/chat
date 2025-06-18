@@ -30,7 +30,7 @@ CONVEX_DEPLOYMENT=your-deployment-id
 CONVEX_URL=your-convex-url
 ```
 
-5. Run the Convex Auth CLI to configure authentication:
+5. Run the Convex Auth CLI (`npx @convex-dev/auth`) to configure authentication:
    - When prompted for SITE_URL, enter `http://localhost:3000`
    - For all other prompts, select 'Yes' to continue
 
