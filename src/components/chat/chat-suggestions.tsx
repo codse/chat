@@ -76,7 +76,7 @@ export function ChatSuggestions({
   return (
     <div
       className={cn(
-        'flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center',
+        'flex w-full max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center',
         {
           'animate-in fade-in-60 zoom-in-90': key > 0,
         }
@@ -97,7 +97,7 @@ export function ChatSuggestions({
           </PromptSuggestion>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
         {options.map((option) => (
           <button
             className="flex w-full text-left max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
