@@ -15,7 +15,7 @@ import { LocalStorage } from '@/utils/local-storage';
 
 export const Route = createFileRoute('/')({
   component: Chat,
-  pendingComponent: () => <Skeleton />,
+  pendingComponent: () => <Skeleton className="w-full h-full" />,
   validateSearch: zodValidator(
     z.object({
       model: z.string().optional(),
