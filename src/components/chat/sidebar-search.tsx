@@ -14,6 +14,7 @@ import { Link } from '@tanstack/react-router';
 import { Badge } from '@/components/ui/badge';
 import { useDebounce } from 'use-debounce';
 import { useQuery } from '@tanstack/react-query';
+import { LocalStorage } from '@/utils/local-storage';
 
 export default function SidebarSearch() {
   const [open, setOpen] = React.useState(false);
@@ -63,6 +64,7 @@ export default function SidebarSearch() {
               value={`${chat._id} ${chat.title}`}
               onSelect={() => {
                 setOpen(false);
+                LocalStorage.currentModel.set(chat.model);
               }}
               asChild
               className="flex items-center gap-2 bg-white transition-all"
