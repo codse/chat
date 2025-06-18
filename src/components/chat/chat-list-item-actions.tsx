@@ -89,7 +89,6 @@ export default function ChatListItemActions() {
       ) => {
         const list = store.getQuery(api.chats.queries.listChats, {
           mode,
-          paginationOpts: { limit: 100, cursor: null },
         });
 
         if (list !== undefined) {
@@ -100,16 +99,8 @@ export default function ChatListItemActions() {
 
           store.setQuery(
             api.chats.queries.listChats,
-            { mode, paginationOpts: { limit: 100, cursor: null } },
+            { mode },
             {
-              ...list,
-              error: undefined,
-              continueCursor: list.continueCursor || '',
-              pageStatus: list.pageStatus as
-                | 'SplitRecommended'
-                | 'SplitRequired'
-                | null,
-              isDone: list.isDone,
               chats: updatedChats
                 .filter(
                   (chat) =>
@@ -124,7 +115,6 @@ export default function ChatListItemActions() {
       const removeFromList = (mode: 'pinned' | 'recent', chatId: string) => {
         const list = store.getQuery(api.chats.queries.listChats, {
           mode,
-          paginationOpts: { limit: 100, cursor: null },
         });
 
         if (list !== undefined) {
@@ -134,16 +124,8 @@ export default function ChatListItemActions() {
 
           store.setQuery(
             api.chats.queries.listChats,
-            { mode, paginationOpts: { limit: 100, cursor: null } },
+            { mode },
             {
-              ...list,
-              error: undefined,
-              continueCursor: list.continueCursor || '',
-              pageStatus: list.pageStatus as
-                | 'SplitRecommended'
-                | 'SplitRequired'
-                | null,
-              isDone: list.isDone,
               chats: updatedChats
                 .filter(
                   (chat) =>

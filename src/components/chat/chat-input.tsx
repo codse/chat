@@ -55,7 +55,36 @@ export function ChatInput({
   });
 
   const { mutate: sendMessage, isPending } = useMutation({
-    mutationFn: useConvexMutation(api.messages.mutations.sendMessage),
+    mutationFn: useConvexMutation(
+      api.messages.mutations.sendMessage
+    ).withOptimisticUpdate((store, args) => {
+      // if chatId is provided, update the model in the chat
+      if (!args.chatId) {
+        return;
+      }
+
+      const messages = store.getQuery(api.messages.queries.getChatMessages, {
+        chatId: args.chatId,
+      });
+
+      store.setQuery(
+        api.messages.queries.getChatMessages,
+        {
+          chatId: args.chatId,
+        },
+        [
+          ...(messages || []),
+          {
+            ...args,
+            _creationTime: Date.now(),
+            _id: Math.random().toString(36).substring(2, 15) as Id<'messages'>,
+            chatId: args.chatId,
+            content: args.content,
+            role: 'user',
+          },
+        ]
+      );
+    }),
     onSuccess: (message: Doc<'messages'> | null) => {
       setInput('');
       resetFiles();

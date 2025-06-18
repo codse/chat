@@ -29,34 +29,14 @@ export function ChatMessages({
   className?: string;
   referenceId?: Id<'messages'> | null;
 }) {
-  const { data } = useSuspenseQuery({
+  const { data: messages } = useSuspenseQuery({
     ...convexQuery(api.messages.queries.getChatMessages, {
       chatId: chatId as Id<'chats'>,
-      paginationOpts: {
-        cursor: null,
-        numItems: 100000,
-      },
     }),
     staleTime: 3000,
     gcTime: 3000,
-    initialData: initialMessage
-      ? {
-          page: [
-            {
-              ...initialMessage,
-            },
-          ],
-          isDone: false,
-          continueCursor: '',
-        }
-      : {
-          page: [],
-          isDone: true,
-          continueCursor: '',
-        },
+    initialData: initialMessage ? [initialMessage] : [],
   });
-
-  const messages = data?.page ?? [];
 
   const navigate = useNavigate();
   const {
