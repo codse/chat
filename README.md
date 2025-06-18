@@ -17,19 +17,30 @@ pnpm install
 Create a `.env.local` & `.env` file in the root directory with:
 
 ```env
+# .env
+VITE_APP_URL=http://localhost:3000
+```
+
+34. Run `npx convex dev` and it will prompt to set up environment.
+   
+```env
 # .env.local
 CONVEX_DEPLOYMENT=your-deployment-id
 CONVEX_URL=your-convex-url
 ```
 
-```
+5. Run `npx @convex-dev/auth` to set up auth.
+
+6. Set up convex environment variables. Either through dashboard or CLI.
+
+```bash
 npx convex env set SITE_URL <your-app-url>
 npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
 npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
 npx convex env set OPENROUTER_API_KEY <your-openrouter-api-key>
 ```
 
-3. Start the development server:
+7. Start the development server:
 ```bash
 pnpm dev
 ```
