@@ -88,7 +88,8 @@ export function ChatInput({
       }
 
       LocalStorage.input.clear(chatId);
-      LocalStorage.currentModel.set(modelId);
+      LocalStorage.model.clear();
+      LocalStorage.currentModel.clear();
       const userKeys = LocalStorage.byok.get();
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
