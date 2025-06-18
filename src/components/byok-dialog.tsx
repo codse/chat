@@ -94,6 +94,11 @@ export default function BYOKDialog({
             />
           </div>
         </div>
+        <p className="mt-2 text-xs text-secondary-foreground/50">
+          Note: Using your own API keys will incur costs according to the
+          respective provider's pricing. We are not responsible for any charges
+          to your account.
+        </p>
         <DialogFooter className="flex gap-2 justify-between mt-4">
           <Button variant="ghost" onClick={clear} type="button">
             Clear
