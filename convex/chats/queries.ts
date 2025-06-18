@@ -15,10 +15,6 @@ export const listChats = query({
     if (!user?._id) {
       return {
         chats: null,
-        error: 'User not found',
-        continueCursor: null,
-        isDone: true,
-        pageStatus: 'done',
       };
     }
 

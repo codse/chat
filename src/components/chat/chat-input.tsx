@@ -191,7 +191,6 @@ export function ChatInput({
 
       <PromptInputTextarea
         autoFocus
-        defaultValue={input}
         placeholder="Type your message here..."
         className="text-muted-foreground placeholder:text-muted-foreground/50 font-medium"
         onPaste={handlePaste}

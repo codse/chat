@@ -7,8 +7,8 @@ export const ChatPageSkeleton = () => {
         <Skeleton className="h-full w-full rounded-none" />
       </div>
 
-      <div className="flex flex-col gap-2 px-2">
-        <Skeleton className="h-12 w-full rounded-none" />
+      <div className="flex flex-col">
+        <Skeleton className="h-[70px] border-b border-border bg-accent/25 w-full rounded-none" />
         <Skeleton className="flex-1 w-full bg-accent/50 rounded-none" />
       </div>
     </div>

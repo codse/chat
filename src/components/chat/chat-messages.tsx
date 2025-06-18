@@ -76,33 +76,30 @@ export function ChatMessages({
       )}
     >
       <ChatContainerRoot className="flex relative w-full flex-col mx-auto flex-1">
-        <Suspense fallback={<MessageSkeleton />}>
-          <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
-            {messages.map((message, index) => (
-              <Fragment key={message._id}>
-                <SystemMessage visible={message._id === referenceId} />
-                <ChatMessage
-                  message={message}
-                  isLastMessage={index === messages.length - 1}
-                  isBranching={
-                    isCreatingBranch &&
-                    branchVariables?.messageId === message._id
+        <ChatContainerContent className="space-y-4 max-w-[var(--breakpoint-md)] mx-auto p-4 w-full">
+          {messages.map((message, index) => (
+            <Fragment key={message._id}>
+              <SystemMessage visible={message._id === referenceId} />
+              <ChatMessage
+                message={message}
+                isLastMessage={index === messages.length - 1}
+                isBranching={
+                  isCreatingBranch && branchVariables?.messageId === message._id
+                }
+                onBranch={() => {
+                  if (!isCreatingBranch) {
+                    createBranch({
+                      chatId: chatId as Id<'chats'>,
+                      model: message.model,
+                      messageId: message._id,
+                    });
+                    return;
                   }
-                  onBranch={() => {
-                    if (!isCreatingBranch) {
-                      createBranch({
-                        chatId: chatId as Id<'chats'>,
-                        model: message.model,
-                        messageId: message._id,
-                      });
-                      return;
-                    }
-                  }}
-                />
-              </Fragment>
-            ))}
-          </ChatContainerContent>
-        </Suspense>
+                }}
+              />
+            </Fragment>
+          ))}
+        </ChatContainerContent>
         <ScrollButton
           variant="secondary"
           className="absolute z-50 bottom-4 left-1/2 -translate-x-1/2"
