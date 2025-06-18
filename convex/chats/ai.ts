@@ -40,6 +40,7 @@ const createModelConfig = (
   options: { search?: boolean } = {}
 ): ModelConfig => {
   const isSearching = options.search && model.supports.includes('search');
+  const supportsReasoning = model.supports.includes('reasoning');
 
   if (model.id.startsWith('openai/') && userKeys?.openai) {
     const openaiModelId = model.id.replace('openai/', '');
@@ -87,8 +88,21 @@ const createModelConfig = (
       modelId
     );
 
+    let providerOptions: Record<string, Record<string, JSONValue>> | undefined =
+      undefined;
+    if (supportsReasoning) {
+      providerOptions = {
+        openrouter: {
+          reasoning: {
+            max_tokens: 2048,
+          },
+        } as const,
+      };
+    }
+
     return {
       model: modelProvider,
+      providerOptions,
     };
   }
 
