@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShareRouteRouteImport } from './routes/share/route'
 import { Route as LoginRouteRouteImport } from './routes/login/route'
 import { Route as ChatRouteRouteImport } from './routes/chat/route'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as RouteRouteImport } from './routes/route'
 import { Route as ShareChatIdRouteImport } from './routes/share/$chatId'
 import { Route as SessionSessionIdRouteImport } from './routes/session/$sessionId'
 import { Route as ChatChatIdRouteImport } from './routes/chat/$chatId'
@@ -32,7 +32,7 @@ const ChatRouteRoute = ChatRouteRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const RouteRoute = RouteRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
@@ -54,7 +54,7 @@ const ChatChatIdRoute = ChatChatIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof RouteRoute
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
   '/share': typeof ShareRouteRouteWithChildren
@@ -63,7 +63,7 @@ export interface FileRoutesByFullPath {
   '/share/$chatId': typeof ShareChatIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof RouteRoute
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
   '/share': typeof ShareRouteRouteWithChildren
@@ -73,7 +73,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/': typeof RouteRoute
   '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
   '/share': typeof ShareRouteRouteWithChildren
@@ -112,7 +112,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  RouteRoute: typeof RouteRoute
   ChatRouteRoute: typeof ChatRouteRouteWithChildren
   LoginRouteRoute: typeof LoginRouteRoute
   ShareRouteRoute: typeof ShareRouteRouteWithChildren
@@ -146,7 +146,7 @@ declare module '@tanstack/react-router' {
       id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof RouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/share/$chatId': {
@@ -198,7 +198,7 @@ const ShareRouteRouteWithChildren = ShareRouteRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  RouteRoute: RouteRoute,
   ChatRouteRoute: ChatRouteRouteWithChildren,
   LoginRouteRoute: LoginRouteRoute,
   ShareRouteRoute: ShareRouteRouteWithChildren,

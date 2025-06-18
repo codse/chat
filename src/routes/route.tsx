@@ -15,7 +15,23 @@ import { LocalStorage } from '@/utils/local-storage';
 
 export const Route = createFileRoute('/')({
   component: Chat,
-  pendingComponent: () => <Skeleton className="w-full h-full" />,
+  pendingComponent: () => (
+    <div className="grid h-full w-full grid-cols-[auto_1fr]">
+      <div className="border-r h-full w-[calc(var(--spacing)*72)]">
+        <Skeleton className="h-full w-full rounded-none" />
+      </div>
+
+      <Skeleton className="h-screen w-full bg-muted-foreground/5 rounded-none">
+        <div className="flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center">
+          <Skeleton className="h-10 w-1/3" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-1/2" />
+          <Skeleton className="h-10 w-1/4" />
+          <Skeleton className="h-10 w-1/2" />
+        </div>
+      </Skeleton>
+    </div>
+  ),
   validateSearch: zodValidator(
     z.object({
       model: z.string().optional(),

@@ -14,9 +14,10 @@ import { seo } from '@/utils/seo';
 import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import appCss from '@/styles/app.css?url';
-import { Unauthenticated } from 'convex/react';
+import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
 import { LoginAnonymously } from '@/components/auth/anonymous';
 import { AppProvider } from '@/context/app-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const LazyErrorPage = lazy(() => import('@/components/error'));
 const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
@@ -84,7 +85,18 @@ function RootComponent() {
     <ConvexAuthProvider client={convexQueryClient.convexClient}>
       <RootDocument>
         <AppProvider>
-          <Outlet />
+          <AuthLoading>
+            <div className="grid h-full w-full grid-cols-[auto_1fr]">
+              <div className="border-r h-full w-[calc(var(--spacing)*72)]">
+                <Skeleton className="h-full w-full rounded-none" />
+              </div>
+
+              <Skeleton className="h-screen w-full bg-muted-foreground/5 rounded-none" />
+            </div>
+          </AuthLoading>
+          <Authenticated>
+            <Outlet />
+          </Authenticated>
           <Unauthenticated>
             <LoginAnonymously />
           </Unauthenticated>
