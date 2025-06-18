@@ -7,6 +7,8 @@ import {
   ToolChoice,
   LanguageModel,
   ToolSet,
+  LanguageModelV1CallOptions,
+  JSONValue,
 } from 'ai';
 import { internal } from '../_generated/api';
 import { Model, recommendedModelList } from '@/utils/models';
@@ -29,6 +31,7 @@ interface ModelConfig {
   model: LanguageModel;
   tools?: ToolSet;
   toolChoice?: ToolChoice<ToolSet>;
+  providerOptions?: LanguageModelV1CallOptions['providerMetadata'];
 }
 
 const createModelConfig = (
@@ -36,32 +39,52 @@ const createModelConfig = (
   userKeys?: { openai?: string; openrouter?: string },
   options: { search?: boolean } = {}
 ): ModelConfig => {
+  const isSearching = options.search && model.supports.includes('search');
+
   if (model.id.startsWith('openai/') && userKeys?.openai) {
-    console.log(`Using user key for OpenAI: (${model.id})`);
-    const modelProvider = createOpenAI({ apiKey: userKeys.openai })(
-      model.id.replace('openai/', '')
-    );
+    const openaiModelId = model.id.replace('openai/', '');
+    const openaiProvider = createOpenAI({ apiKey: userKeys.openai });
+    let modelProvider: LanguageModel = openaiProvider(openaiModelId);
+    let tools: ToolSet | undefined = undefined;
+    let toolChoice: ToolChoice<ToolSet> | undefined = undefined;
+    let providerOptions: Record<string, Record<string, JSONValue>> | undefined =
+      undefined;
 
-    const config: ModelConfig = {
-      model: modelProvider,
-    };
-
-    if (options.search && model.supports.includes('search')) {
-      config.tools = {
-        web_search_preview: openai.tools.webSearchPreview({
-          searchContextSize: 'medium',
-        }),
-      };
-      config.toolChoice = { type: 'tool', toolName: 'web_search_preview' };
+    if (isSearching) {
+      if (model.capabilities?.includes('tool-call')) {
+        tools = {
+          web_search_preview: openai.tools.webSearchPreview({
+            searchContextSize: 'medium',
+          }),
+        };
+        toolChoice = { type: 'tool', toolName: 'web_search_preview' };
+        console.log('Using web_search_preview');
+      } else {
+        providerOptions = {
+          openai: {
+            web_search_preview: {
+              searchContextSize: 'medium',
+            },
+          },
+        };
+        console.log('Using providerOptions for web search');
+      }
     }
 
-    return config;
+    return {
+      model: modelProvider,
+      tools,
+      toolChoice,
+      providerOptions,
+    };
   }
 
   if (userKeys?.openrouter) {
-    console.log(`Using user key for OpenRouter: (${model.id})`);
+    // https://openrouter.ai/docs/features/web-search
+    const modelId = model.id + (isSearching ? ':online' : '');
+    console.log(`Using user key for OpenRouter: (${modelId})`);
     const modelProvider = createOpenRouter({ apiKey: userKeys.openrouter })(
-      model.id
+      modelId
     );
 
     return {
@@ -275,6 +298,8 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
         }
 
         if (event.chunk.type === 'source') {
+          // TODO: fix this.
+          // This is not working as expected.
           sources.push({
             url: event.chunk.source.url,
             title: event.chunk.source.title ?? '',
@@ -304,7 +329,10 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
         });
       },
       onError: async (event) => {
-        console.error(event);
+        console.error(
+          'There was an error generating the response.',
+          (event.error as Error)?.message
+        );
         await Promise.all([
           ctx.runMutation(internal.messages.mutations.updateMessage, {
             messageId: message._id,
@@ -321,13 +349,20 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
 
     const reader = stream.textStream.getReader();
     while (true) {
+      // Convex doesn't keep the process alive, so we need to keep the reader alive.
+      // This is a hack to keep the process alive.
+      // TODO: find a better way to do this.
       const { done } = await reader.read();
       if (done) {
         break;
       }
     }
 
-    const [steps, files] = await Promise.all([stream.steps, stream.files]);
+    const [steps, _sources, files] = await Promise.all([
+      stream.steps,
+      stream.sources,
+      stream.files,
+    ]);
 
     await ctx.runMutation(internal.messages.mutations.updateMessage, {
       messageId: message._id,
