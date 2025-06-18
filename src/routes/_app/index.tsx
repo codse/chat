@@ -13,7 +13,7 @@ import { z } from 'zod';
 import { zodValidator } from '@tanstack/zod-adapter';
 import { LocalStorage } from '@/utils/local-storage';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_app/')({
   component: Chat,
   pendingComponent: () => (
     <div className="grid h-full w-full grid-cols-[auto_1fr]">
@@ -41,35 +41,23 @@ export const Route = createFileRoute('/')({
 
 function Chat() {
   const [selectedSuggestion, setSelectedSuggestion] = useState<string>();
-  const searchParams = useSearch({ from: '/', shouldThrow: false });
+  const searchParams = useSearch({ from: '/_app/', shouldThrow: false });
 
   return (
-    <SidebarProvider
-      style={
-        {
-          '--sidebar-width': 'calc(var(--spacing) * 72)',
-          '--header-height': 'calc(var(--spacing) * 12)',
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar variant="sidebar" />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col relative">
-          <SidebarTrigger className="absolute top-4 left-4 bg-accent md:invisible" />
-          <div className="@container/main flex flex-1 flex-col gap-2 [data-state=collapsed]:hidden">
-            <ChatSuggestions onSuggestionClick={setSelectedSuggestion} />
-          </div>
-          <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
-            <ChatInput
-              defaultPrompt={selectedSuggestion}
-              key={selectedSuggestion}
-              // If the model is set in the search params, use it
-              // Otherwise, use the model from the local storage
-              initialModel={searchParams?.model || LocalStorage.model.get()}
-            />
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex flex-1 flex-col relative">
+      <SidebarTrigger className="absolute top-4 left-4 bg-accent md:invisible" />
+      <div className="@container/main flex flex-1 flex-col gap-2 [data-state=collapsed]:hidden">
+        <ChatSuggestions onSuggestionClick={setSelectedSuggestion} />
+      </div>
+      <div className="px-4 max-w-[var(--breakpoint-md)] mx-auto w-full">
+        <ChatInput
+          defaultPrompt={selectedSuggestion}
+          key={selectedSuggestion}
+          // If the model is set in the search params, use it
+          // Otherwise, use the model from the local storage
+          initialModel={searchParams?.model || LocalStorage.model.get()}
+        />
+      </div>
+    </div>
   );
 }

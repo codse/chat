@@ -10,15 +10,14 @@ export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
   const { chat } = useLazyChatContext();
   const isLoading = !chat;
   const match = useMatch({
-    from: '/share/$chatId',
+    from: '/_app/share/$chatId',
     shouldThrow: false,
   });
   const isSharedChat = Boolean(match);
   return (
-    <header className="py-4 w-full border-b border-border chat-header sticky top-0 z-40">
-      <SidebarTrigger className="size-10 absolute left-2 md:left-4 top-1/2 -translate-y-1/2" />
-      <div className="grid grid-cols-[32px_1fr_auto] md:grid-cols-[0px_1fr_auto] items-center gap-4 max-w-[var(--breakpoint-md)] mx-auto px-4">
-        <span />
+    <header className="py-4 w-full border-b border-border flex flex-row items-center chat-header sticky top-0 z-40">
+      <SidebarTrigger className="size-10 ms-4" />
+      <div className="grid grid-cols-[1fr_auto] flex-1 w-full md:grid-cols-[1fr_auto] items-center gap-4 max-w-[var(--breakpoint-md)] mx-auto px-4">
         {isLoading ? (
           <Skeleton className="h-6 w-40" />
         ) : (

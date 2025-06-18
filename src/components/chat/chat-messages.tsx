@@ -11,7 +11,6 @@ import { Doc, Id } from '@convex/_generated/dataModel';
 import { useMutation, useSuspenseQuery } from '@tanstack/react-query';
 import { ScrollButton } from '../ui/scroll-button';
 import { cn } from '@/lib/utils';
-import { MessageSkeleton } from './message-skeleton';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { SystemMessage } from './system-message';

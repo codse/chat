@@ -4,15 +4,15 @@ import { ChatView } from '@/components/chat/chat-view';
 import { ChatError } from '@/components/chat/chat-error';
 import { ChatPageSkeleton } from '@/components/chat/page-skeleton';
 
-export const Route = createFileRoute('/share/$chatId')({
+export const Route = createFileRoute('/_app/chat/$chatId')({
   component: ChatPage,
   notFoundComponent: ChatNotFound,
   errorComponent: ChatError,
-  pendingComponent: ChatPageSkeleton,
+  pendingComponent: () => <ChatPageSkeleton noSideBar />,
 });
 
 function ChatPage() {
-  const { chatId } = useParams({ from: '/share/$chatId' });
+  const { chatId } = useParams({ from: '/_app/chat/$chatId' });
 
   return <ChatView chatId={chatId} />;
 }

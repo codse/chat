@@ -18,12 +18,12 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
   );
 
   const shareMatch = useMatch({
-    from: '/share/$chatId',
+    from: '/_app/share/$chatId',
     shouldThrow: false,
   });
 
   const chatMatch = useMatch({
-    from: '/chat/$chatId',
+    from: '/_app/chat/$chatId',
     shouldThrow: false,
   });
 

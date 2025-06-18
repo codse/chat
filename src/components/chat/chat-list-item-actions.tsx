@@ -15,6 +15,35 @@ import { useNavigate } from '@tanstack/react-router';
 import { kSetChat } from './event.utils';
 import { useConvexMutation } from '@convex-dev/react-query';
 import { useMutation } from '@tanstack/react-query';
+import { OptimisticLocalStore } from 'convex/browser';
+
+const removeFromList = (
+  store: OptimisticLocalStore,
+  mode: 'pinned' | 'recent',
+  chatId: string
+) => {
+  const list = store.getQuery(api.chats.queries.listChats, {
+    mode,
+  });
+
+  if (list !== undefined) {
+    const updatedChats = (list.chats || [])?.filter(
+      (c) => c._id !== chatId
+    ) as Chat[];
+
+    store.setQuery(
+      api.chats.queries.listChats,
+      { mode },
+      {
+        chats: updatedChats
+          .filter(
+            (chat) => chat._id !== undefined && chat._creationTime !== undefined
+          )
+          .sort((a, b) => b._creationTime! - a._creationTime!),
+      }
+    );
+  }
+};
 
 export default function ChatListItemActions() {
   const navigate = useNavigate();
@@ -61,6 +90,12 @@ export default function ChatListItemActions() {
           }
         );
       }
+
+      if (chat?.type === 'pinned') {
+        removeFromList(store, 'pinned', args.chatId);
+      } else {
+        removeFromList(store, 'recent', args.chatId);
+      }
     }),
   });
 
@@ -82,11 +117,7 @@ export default function ChatListItemActions() {
         );
       }
 
-      const setToList = (
-        mode: 'pinned' | 'recent',
-        chat: Chat | undefined,
-        chatId: string
-      ) => {
+      const setToList = (mode: 'pinned' | 'recent', chat: Chat | undefined) => {
         const list = store.getQuery(api.chats.queries.listChats, {
           mode,
         });
@@ -112,39 +143,14 @@ export default function ChatListItemActions() {
         }
       };
 
-      const removeFromList = (mode: 'pinned' | 'recent', chatId: string) => {
-        const list = store.getQuery(api.chats.queries.listChats, {
-          mode,
-        });
-
-        if (list !== undefined) {
-          const updatedChats = (list.chats || [])?.filter(
-            (c) => c._id !== chatId
-          ) as Chat[];
-
-          store.setQuery(
-            api.chats.queries.listChats,
-            { mode },
-            {
-              chats: updatedChats
-                .filter(
-                  (chat) =>
-                    chat._id !== undefined && chat._creationTime !== undefined
-                )
-                .sort((a, b) => b._creationTime! - a._creationTime!),
-            }
-          );
-        }
-      };
-
       // If chat was pinned, remove from pinned and add to recent
       // If chat was not pinned, remove from recent and add to pinned
       if (chat?.type === 'pinned') {
-        removeFromList('pinned', args.chatId);
-        setToList('recent', chat, args.chatId);
+        removeFromList(store, 'pinned', args.chatId);
+        setToList('recent', chat);
       } else {
-        removeFromList('recent', args.chatId);
-        setToList('pinned', chat, args.chatId);
+        removeFromList(store, 'recent', args.chatId);
+        setToList('pinned', chat);
       }
     }),
   });
