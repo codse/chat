@@ -69,13 +69,9 @@ export default function ChatMessage({
               {Boolean(message.reasoning?.length) && (
                 <Reasoning defaultOpen={false} className="px-2 text-sm">
                   <ReasoningTrigger>Show reasoning</ReasoningTrigger>
-                  {message?.status === 'pending' ? (
-                    <ReasoningResponse text={message.reasoning as string} />
-                  ) : (
-                    <ReasoningContent>
-                      <Markdown>{message.reasoning as string}</Markdown>
-                    </ReasoningContent>
-                  )}
+                  <ReasoningContent>
+                    <Markdown>{message.reasoning as string}</Markdown>
+                  </ReasoningContent>
                 </Reasoning>
               )}
             </div>

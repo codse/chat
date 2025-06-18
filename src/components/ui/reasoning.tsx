@@ -146,7 +146,7 @@ function ReasoningContent({
     >
       <div
         ref={innerRef}
-        className="ps-2 ms-2 border-s-2 border-muted [&_p,&_ul]:pt-2 pb-1 mb-1"
+        className="ps-4 ms-2 border-s-2 border-muted [&_p,&_ul]:pt-2 pb-1 mb-1"
       >
         {children}
       </div>
