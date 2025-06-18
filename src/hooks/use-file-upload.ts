@@ -4,6 +4,7 @@ import { useConvexMutation } from '@convex-dev/react-query';
 import { api } from '@convex/_generated/api';
 import { Id } from '@convex/_generated/dataModel';
 import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE } from '@/utils/uploads';
+import { toast } from 'sonner';
 
 export type Attachment = {
   fileId: Id<'_storage'>;
@@ -16,6 +17,7 @@ export function useFileUpload() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const generateUploadUrl = useConvexMutation(api.storage.generateUploadUrl);
+  const removeFile = useConvexMutation(api.storage.removeFile);
 
   const { mutateAsync: uploadFile, isPending: isUploading } = useMutation({
     mutationFn: async (file: File) => {
@@ -68,7 +70,17 @@ export function useFileUpload() {
   };
 
   const removeAttachment = (fileId: Id<'_storage'>) => {
+    const current = [...attachments];
     setAttachments((prev) => prev.filter((att) => att.fileId !== fileId));
+    removeFile({ fileId })
+      .then(() => {
+        toast.success('File removed');
+      })
+      .catch((error) => {
+        toast.error('Failed to remove file');
+        console.error(error);
+        setAttachments(current);
+      });
   };
 
   const reset = () => {
