@@ -16,8 +16,14 @@ export const removeFile = mutation({
     if (!identity) {
       throw new Error('Unauthorized');
     }
-    // TODO: Delete file after marking the attachment in database as deleted
-    // we need to change this.
-    return await ctx.storage.delete(args.fileId);
+
+    const file = await ctx.db.system.get(args.fileId);
+    if (!file) {
+      throw new Error('File not found');
+    }
+
+    // TODO: implement user ownership check
+
+    await ctx.storage.delete(args.fileId);
   },
 });
