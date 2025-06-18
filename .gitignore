@@ -19,7 +19,6 @@ yarn.lock
 
 .env.local
 _ignore
-convex/_generated/
 dist/
 .tanstack/
 
