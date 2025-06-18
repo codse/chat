@@ -8,20 +8,21 @@
 ## Installation
 
 1. Clone the repository
+
 2. Install dependencies:
 ```bash
 pnpm install
 ```
 
 3. Set up environment variables:
-Create a `.env.local` & `.env` file in the root directory with:
+Create `.env.local` & `.env` files in the root directory with:
 
 ```env
 # .env
 VITE_APP_URL=http://localhost:3000
 ```
 
-34. Run `npx convex dev` and it will prompt to set up environment.
+4. Run `npx convex dev` and use local deployment. It will create `.env.local` file for you.
    
 ```env
 # .env.local
@@ -29,15 +30,23 @@ CONVEX_DEPLOYMENT=your-deployment-id
 CONVEX_URL=your-convex-url
 ```
 
-5. Run `npx @convex-dev/auth` to set up auth.
+5. Run the Convex Auth CLI to configure authentication:
+   - When prompted for SITE_URL, enter `http://localhost:3000`
+   - For all other prompts, select 'Yes' to continue
 
-6. Set up convex environment variables. Either through dashboard or CLI.
+6. Set up Convex environment variables, either through the dashboard or the CLI.
+
+This is used for free models. Alternatively, you can set up keys using BYOK dialog from app's sidebar.
 
 ```bash
-npx convex env set SITE_URL <your-app-url>
+npx convex env set OPENROUTER_API_KEY <your-openrouter-api-key>
+```
+
+If you'd like to use Google login:
+
+```bash
 npx convex env set AUTH_GOOGLE_SECRET <your-google-secret>
 npx convex env set AUTH_GOOGLE_ID <your-google-client-id>
-npx convex env set OPENROUTER_API_KEY <your-openrouter-api-key>
 ```
 
 7. Start the development server:
