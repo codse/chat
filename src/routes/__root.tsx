@@ -17,7 +17,7 @@ import appCss from '@/styles/app.css?url';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
 import { LoginAnonymously } from '@/components/auth/anonymous';
 import { AppProvider } from '@/context/app-context';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ChatPageSkeleton } from '@/components/chat/page-skeleton';
 
 const LazyErrorPage = lazy(() => import('@/components/error'));
 const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
@@ -75,6 +75,7 @@ export const Route = createRootRouteWithContext<{
   },
   notFoundComponent: LazyNotFoundPage,
   component: RootComponent,
+  pendingComponent: ChatPageSkeleton,
 });
 
 function RootComponent() {
@@ -86,13 +87,12 @@ function RootComponent() {
       <RootDocument>
         <AppProvider>
           <AuthLoading>
-            <Outlet />
+            <ChatPageSkeleton />
           </AuthLoading>
           <Authenticated>
             <Outlet />
           </Authenticated>
           <Unauthenticated>
-            <Outlet />
             <LoginAnonymously />
           </Unauthenticated>
         </AppProvider>
