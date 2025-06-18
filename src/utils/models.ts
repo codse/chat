@@ -206,4 +206,4 @@ export const recommendedModelList = Object.values(supportedModels)
   .filter((model) => model.recommended)
   .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
 
-export const defaultModelId = 'openai/gpt-4o-mini';
+export const defaultModelId = 'openai/gpt-4.1-nano';
