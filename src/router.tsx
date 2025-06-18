@@ -11,6 +11,7 @@ import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
 import { Doc } from '@convex/_generated/dataModel';
 import { lazy } from 'react';
+import { Skeleton } from './components/ui/skeleton';
 
 const LazyErrorPage = lazy(() => import('@/components/error'));
 const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
@@ -55,7 +56,15 @@ export function createRouter() {
       defaultPreload: 'intent',
       defaultErrorComponent: LazyErrorPage,
       defaultNotFoundComponent: LazyNotFoundPage,
-      defaultPendingComponent: () => <div>Loading...</div>,
+      defaultPendingComponent: () => (
+        <div className="grid h-full w-full grid-cols-[auto_1fr]">
+          <div className="border-r h-full w-[calc(var(--spacing)*72)]">
+            <Skeleton className="h-full w-full rounded-none" />
+          </div>
+
+          <Skeleton className="h-screen w-full bg-muted-foreground/5 rounded-none" />
+        </div>
+      ),
       context: {
         queryClient,
         convexQueryClient,

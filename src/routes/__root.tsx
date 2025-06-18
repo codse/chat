@@ -86,18 +86,13 @@ function RootComponent() {
       <RootDocument>
         <AppProvider>
           <AuthLoading>
-            <div className="grid h-full w-full grid-cols-[auto_1fr]">
-              <div className="border-r h-full w-[calc(var(--spacing)*72)]">
-                <Skeleton className="h-full w-full rounded-none" />
-              </div>
-
-              <Skeleton className="h-screen w-full bg-muted-foreground/5 rounded-none" />
-            </div>
+            <Outlet />
           </AuthLoading>
           <Authenticated>
             <Outlet />
           </Authenticated>
           <Unauthenticated>
+            <Outlet />
             <LoginAnonymously />
           </Unauthenticated>
         </AppProvider>
