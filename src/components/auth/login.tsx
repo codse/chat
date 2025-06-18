@@ -90,7 +90,7 @@ export function LoginPage() {
         <CardContent>
           <Button
             onClick={handleGoogleSignIn}
-            className="w-full"
+            className="w-full relative z-50"
             variant="outline"
             disabled={isSigningIn}
           >
@@ -114,32 +114,35 @@ export function LoginPage() {
             </svg>
             {isSigningIn ? 'Signing in...' : 'Sign in with Google'}
           </Button>
-          {Boolean(chatCount) && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="flex flex-row gap-2 items-center mt-6 w-fit">
-                  <Checkbox
-                    id="link-chats"
-                    checked={linkChats}
-                    onCheckedChange={(checked) => setLinkChats(!!checked)}
-                  />
-                  <Label htmlFor="link-chats">
-                    Link my chats{' '}
-                    <InfoIcon className="w-4 h-4 text-muted-foreground" />
-                  </Label>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                You have {chatCount} unsaved{' '}
-                {chatCount === 1 ? 'chat' : 'chats'} from this session.
-                <br />
-                {chatCount === 1 ? 'This chat' : 'These chats'} will be{' '}
-                {linkChats
-                  ? 'linked to your account.'
-                  : 'deleted if not linked.'}
-              </TooltipContent>
-            </Tooltip>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild disabled={!chatCount}>
+              <div
+                className={cn(
+                  'flex flex-row gap-2 items-center w-fit transition-all -translate-y-6 opacity-0 h-0 relative overflow-hidden',
+                  {
+                    'h-fit mt-6 opacity-100 -translate-y-0': chatCount,
+                  }
+                )}
+              >
+                <Checkbox
+                  id="link-chats"
+                  checked={linkChats}
+                  onCheckedChange={(checked) => setLinkChats(!!checked)}
+                />
+                <Label htmlFor="link-chats">
+                  Link my chats{' '}
+                  <InfoIcon className="w-4 h-4 text-muted-foreground" />
+                </Label>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              You have {chatCount} unsaved {chatCount === 1 ? 'chat' : 'chats'}{' '}
+              from this session.
+              <br />
+              {chatCount === 1 ? 'This chat' : 'These chats'} will be{' '}
+              {linkChats ? 'linked to your account.' : 'deleted if not linked.'}
+            </TooltipContent>
+          </Tooltip>
         </CardContent>
       </Card>
     </div>

@@ -112,7 +112,10 @@ export function ChatInput({
         });
       }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
+      if (variables.chatId === chatId && !input.trim()) {
+        setInput(variables.content);
+      }
       toast.error(
         `Failed to send message.\n\n${error.message || 'Unknown error'}`
       );
@@ -121,27 +124,30 @@ export function ChatInput({
   });
 
   const handleSubmit = () => {
-    if (input.trim() || attachments.length > 0) {
-      if (!available) {
-        toast.error(
-          'Model is not available. Please select a different model or set your API keys in the sidebar.'
-        );
-        return;
-      }
-
-      LocalStorage.input.clear(chatId);
-      LocalStorage.model.clear();
-      LocalStorage.currentModel.clear();
-      const userKeys = LocalStorage.byok.get();
-      sendMessage({
-        chatId: chatId as Id<'chats'> | undefined,
-        content: input,
-        model: modelId,
-        attachments,
-        userKeys: userKeys.openai || userKeys.openrouter ? userKeys : undefined,
-        search: enableSearch && webSearch.supported,
-      });
+    if (!input.trim() && !attachments?.length) {
+      return;
     }
+
+    if (!available) {
+      toast.error(
+        'Model is not available. Please select a different model or set your API keys in the sidebar.'
+      );
+      return;
+    }
+
+    LocalStorage.input.clear(chatId);
+    LocalStorage.model.clear();
+    LocalStorage.currentModel.clear();
+    const userKeys = LocalStorage.byok.get();
+    sendMessage({
+      chatId: chatId as Id<'chats'> | undefined,
+      content: input,
+      model: modelId,
+      attachments,
+      userKeys: userKeys.openai || userKeys.openrouter ? userKeys : undefined,
+      search: enableSearch && webSearch.supported,
+    });
+    setInput('');
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
