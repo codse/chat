@@ -120,7 +120,7 @@ export default function NavUser() {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton asChild className="h-12">
             <Link to="/login">
               <LogInIcon />
               Login

@@ -21,4 +21,4 @@ yarn.lock
 _ignore
 dist/
 .tanstack/
-
+.nitro/

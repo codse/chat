@@ -6,32 +6,32 @@ import { kOpenNewChat } from './event.utils';
 
 const suggestions = {
   create: [
-    'Create a fantasy world map with flying islands and glowing rivers',
-    'Generate a professional email apologizing for a missed meeting',
-    'Design a modern logo for a fictional AI startup named "NeuroNest"',
-    'Create a new chat to brainstorm sci-fi story ideas',
-    'Create an image of a neon-lit street in Tokyo during a rainstorm',
+    "Design a time travel agency's vacation packages to different eras",
+    "Write a recipe for the world's most ridiculous sandwich",
+    'Create a new sport that combines chess and parkour',
+    'Invent a fictional holiday and its bizarre traditions',
+    'Design a theme park for cats, run by cats',
   ],
   explore: [
-    'Explore the psychological effects of social media on teenagers',
-    'What would happen if Earth had two moons?',
-    'How do different cultures celebrate the New Year?',
-    'Explore why cats purr and what it means',
-    'Dive into the daily life of an ancient Roman citizen',
+    'What if humans could photosynthesize like plants?',
+    'Explore how animals would evolve if gravity was half as strong',
+    'What would happen if everyone suddenly spoke in rhymes?',
+    'Investigate the secret lives of household appliances',
+    'What if clouds were made of different flavors?',
   ],
   code: [
-    'Build a REST API with Express.js and MongoDB for a todo app',
-    'Explain how closures work in JavaScript with examples',
-    'Write a Python function to detect palindromes using recursion',
-    'Compare performance of useMemo vs useCallback in React',
-    'Generate unit tests for a user login function in TypeScript',
+    'Build a program that translates human speech into dog thoughts',
+    'Create a dating app for programming languages',
+    'Write an algorithm to calculate the perfect nap duration',
+    'Design a social network for time travelers',
+    'Make a compiler that turns code into haiku poetry',
   ],
   learn: [
-    'Teach me the basics of quantum computing like I’m 10',
-    'Learn the differences between machine learning and deep learning',
-    'Summarize World War I in 10 bullet points',
-    'Learn how inflation affects everyday life with simple examples',
-    'Explain the fundamentals of blockchain in 5 minutes',
+    'Explain black holes using only pizza analogies',
+    'Learn why flamingos stand on one leg like a detective solving a case',
+    'Describe the internet to a medieval knight',
+    'Explain DNA using only emoji',
+    'Learn about the physics of superhero powers',
   ],
 } as const;
 
@@ -75,7 +75,12 @@ export function ChatSuggestions({
 
   return (
     <div
-      className="flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center animate-in fade-in-60 zoom-in-90"
+      className={cn(
+        'flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center',
+        {
+          'animate-in fade-in-60 zoom-in-90': key > 0,
+        }
+      )}
       key={`suggestions-${key}`}
     >
       <div className="flex flex-wrap gap-2 px-2">
@@ -95,7 +100,7 @@ export function ChatSuggestions({
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
-            className="flex w-full max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="flex w-full text-left max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
             key={option}
             onClick={() => onSuggestionClick(option + ' ')}
           >

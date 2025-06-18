@@ -14,10 +14,6 @@ export function ChatList({ mode }: { mode: 'pinned' | 'recent' }) {
   const { data } = useSuspenseQuery(
     convexQuery(api.chats.queries.listChats, {
       mode,
-      paginationOpts: {
-        limit: 100,
-        cursor: null,
-      },
     })
   );
 

@@ -1,4 +1,3 @@
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import {
   Outlet,
   createRootRouteWithContext,
@@ -6,8 +5,9 @@ import {
   Scripts,
   useRouteContext,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import * as React from 'react';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
+// import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+import { lazy } from 'react';
 import { Toaster } from 'sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import { seo } from '@/utils/seo';
@@ -17,6 +17,10 @@ import appCss from '@/styles/app.css?url';
 import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
 import { LoginAnonymously } from '@/components/auth/anonymous';
 import { AppProvider } from '@/context/app-context';
+import { ChatPageSkeleton } from '@/components/chat/page-skeleton';
+
+const LazyErrorPage = lazy(() => import('@/components/error'));
+const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -62,15 +66,16 @@ export const Route = createRootRouteWithContext<{
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
-  errorComponent: (props) => {
+  errorComponent: () => {
     return (
       <RootDocument>
-        <div>Error</div>
+        <LazyErrorPage />
       </RootDocument>
     );
   },
-  notFoundComponent: () => <div>Not Found</div>,
+  notFoundComponent: LazyNotFoundPage,
   component: RootComponent,
+  pendingComponent: ChatPageSkeleton,
 });
 
 function RootComponent() {
@@ -80,17 +85,17 @@ function RootComponent() {
   return (
     <ConvexAuthProvider client={convexQueryClient.convexClient}>
       <RootDocument>
-        <AuthLoading>
-          <div className="h-dvh w-full bg-background" />
-        </AuthLoading>
-        <Authenticated>
-          <AppProvider>
+        <AppProvider>
+          <AuthLoading>
+            <ChatPageSkeleton />
+          </AuthLoading>
+          <Authenticated>
             <Outlet />
-          </AppProvider>
-        </Authenticated>
-        <Unauthenticated>
-          <LoginAnonymously />
-        </Unauthenticated>
+          </Authenticated>
+          <Unauthenticated>
+            <LoginAnonymously />
+          </Unauthenticated>
+        </AppProvider>
       </RootDocument>
     </ConvexAuthProvider>
   );
@@ -109,8 +114,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <Toaster richColors />
           </div>
         </div>
-        <ReactQueryDevtools buttonPosition="top-left" />
-        <TanStackRouterDevtools position="top-left" />
+        {/* <ReactQueryDevtools buttonPosition="top-left" />
+        <TanStackRouterDevtools position="top-left" /> */}
         <Scripts />
       </body>
     </html>

@@ -155,7 +155,7 @@ function ChatListItemComponent({
       <SidebarMenuButton
         asChild
         isActive={active}
-        onClick={() => {
+        onDoubleClick={() => {
           if (!isEditing) {
             setIsEditing({
               isEditing: true,

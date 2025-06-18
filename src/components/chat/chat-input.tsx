@@ -22,6 +22,20 @@ import { toast } from 'sonner';
 import { useModelInfo } from './hooks/use-model-info';
 import { useDebounce } from 'use-debounce';
 
+const focusInput = () => {
+  const textArea = document.getElementById(
+    'text-area'
+  ) as HTMLTextAreaElement | null;
+
+  if (!textArea) {
+    return;
+  }
+
+  textArea.focus();
+  textArea.selectionStart = textArea.value.length;
+  textArea.selectionEnd = textArea.value.length;
+};
+
 export function ChatInput({
   chatId,
   defaultPrompt,
@@ -39,7 +53,6 @@ export function ChatInput({
   const { chat } = useLazyChatContext();
   const { model, fileUploads, webSearch, modelId, setModelId, available } =
     useModelInfo(initialModel, chat?.model);
-  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     attachments,
@@ -55,7 +68,36 @@ export function ChatInput({
   });
 
   const { mutate: sendMessage, isPending } = useMutation({
-    mutationFn: useConvexMutation(api.messages.mutations.sendMessage),
+    mutationFn: useConvexMutation(
+      api.messages.mutations.sendMessage
+    ).withOptimisticUpdate((store, args) => {
+      // if chatId is provided, update the model in the chat
+      if (!args.chatId) {
+        return;
+      }
+
+      const messages = store.getQuery(api.messages.queries.getChatMessages, {
+        chatId: args.chatId,
+      });
+
+      store.setQuery(
+        api.messages.queries.getChatMessages,
+        {
+          chatId: args.chatId,
+        },
+        [
+          ...(messages || []),
+          {
+            ...args,
+            _creationTime: Date.now(),
+            _id: Math.random().toString(36).substring(2, 15) as Id<'messages'>,
+            chatId: args.chatId,
+            content: args.content,
+            role: 'user',
+          },
+        ]
+      );
+    }),
     onSuccess: (message: Doc<'messages'> | null) => {
       setInput('');
       resetFiles();
@@ -88,7 +130,8 @@ export function ChatInput({
       }
 
       LocalStorage.input.clear(chatId);
-      LocalStorage.currentModel.set(modelId);
+      LocalStorage.model.clear();
+      LocalStorage.currentModel.clear();
       const userKeys = LocalStorage.byok.get();
       sendMessage({
         chatId: chatId as Id<'chats'> | undefined,
@@ -105,7 +148,7 @@ export function ChatInput({
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
       handleFiles(newFiles);
-      textInputRef.current?.focus();
+      focusInput();
     }
   };
 
@@ -114,16 +157,9 @@ export function ChatInput({
       event.preventDefault();
       const newFiles = Array.from(event.clipboardData.files);
       handleFiles(newFiles);
-      textInputRef.current?.focus();
+      focusInput();
     }
   };
-
-  useEffect(() => {
-    if (defaultPrompt?.length && textInputRef.current) {
-      textInputRef.current.selectionStart = textInputRef.current.value.length;
-      textInputRef.current.selectionEnd = textInputRef.current.value.length;
-    }
-  }, [defaultPrompt?.length]);
 
   const [debouncedInput] = useDebounce(input, 250, {
     maxWait: 1000,
@@ -154,11 +190,13 @@ export function ChatInput({
       />
 
       <PromptInputTextarea
-        ref={textInputRef}
         autoFocus
         placeholder="Type your message here..."
         className="text-muted-foreground placeholder:text-muted-foreground/50 font-medium"
         onPaste={handlePaste}
+        // Passing the ref breaks is internal ref logic. We can either update that to use forwardRef
+        // or just use id to focus the input (which is what we do here)
+        id="text-area"
       />
 
       <PromptInputActions className="flex items-center justify-between gap-2 pt-2">

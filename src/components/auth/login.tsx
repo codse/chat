@@ -17,8 +17,8 @@ import { PublicUser } from '@/types/chat';
 import { Checkbox } from '../ui/checkbox';
 import { Label } from '../ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
-import { InfoIcon } from 'lucide-react';
-import { Navigate } from '@tanstack/react-router';
+import { ArrowLeft, InfoIcon } from 'lucide-react';
+import { Link, Navigate } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 
 export function LoginPage() {
@@ -75,7 +75,14 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center">
       <Card className={cn('w-[350px]', isFetching && 'animate-pulse')}>
         <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
+          <Link
+            to="/"
+            className="flex mb-3 text-sm items-center gap-2 hover:underline text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            <span className="text-sm">Back to chat</span>
+          </Link>
+          <CardTitle>Welcome!</CardTitle>
           <CardDescription>
             Sign in to unlock more features and keep your chats
           </CardDescription>

@@ -74,7 +74,7 @@ export default function ChatMessage({
             {message?.status !== 'pending' && (
               <div
                 className={cn(
-                  'text-xs inline-flex items-center gap-0.5 text-muted-foreground animate-in fade-in duration-100 chat-actions px-2',
+                  'text-xs inline-flex items-center gap-0 text-muted-foreground chat-actions px-2',
                   {
                     '-mt-4': Boolean(message.content),
                   }
@@ -85,20 +85,6 @@ export default function ChatMessage({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={onBranch}
-                      disabled={isBranching}
-                    >
-                      <Split className="size-4 rotate-180" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Branch from this message</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="me-2"
                       onClick={() => {
                         if (!message?.content) {
                           toast.error('No content to copy');
@@ -107,13 +93,30 @@ export default function ChatMessage({
                         navigator.clipboard.writeText(message.content);
                         toast.success('Copied to clipboard');
                       }}
+                      className="animate-in fade-in duration-100 zoom-in-90"
                     >
                       <Copy />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Copy message</TooltipContent>
                 </Tooltip>
-                {getModelName(message.model)}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onBranch}
+                      className="me-2 animate-in fade-in duration-200 zoom-in-90"
+                      disabled={isBranching}
+                    >
+                      <Split className="size-4 rotate-180" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Branch from this message</TooltipContent>
+                </Tooltip>
+                <span className="animate-in fade-in duration-300 zoom-in-90">
+                  {getModelName(message.model)}
+                </span>
               </div>
             )}
           </>

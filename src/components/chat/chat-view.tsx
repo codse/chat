@@ -8,7 +8,7 @@ import { Id } from '@convex/_generated/dataModel';
 import { ChatHeader } from '@/components/chat/chat-header';
 
 export function ChatView({ chatId }: { chatId: string }) {
-  const { location, isLoading, isTransitioning } = useRouterState();
+  const { location } = useRouterState();
   const initialMessage = location.state?.message;
 
   return (
@@ -20,9 +20,7 @@ export function ChatView({ chatId }: { chatId: string }) {
       <ChatHeader chatId={chatId as Id<'chats'>} />
       <Suspense fallback={<MessageSkeleton />}>
         <ChatMessages
-          className={
-            isLoading || isTransitioning ? 'opacity-50' : 'animate-in fade-in'
-          }
+          key={chatId}
           chatId={chatId}
           initialMessage={initialMessage}
           referenceId={

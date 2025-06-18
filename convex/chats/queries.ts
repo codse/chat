@@ -9,26 +9,16 @@ import { checkChatPermissions } from './permissions';
 export const listChats = query({
   args: {
     mode: v.optional(v.union(v.literal('pinned'), v.literal('recent'))),
-    paginationOpts: v.optional(
-      v.object({
-        limit: v.number(),
-        cursor: v.union(v.string(), v.null()),
-      })
-    ),
   },
   handler: async (ctx, args) => {
     const user = await getUser(ctx);
     if (!user?._id) {
       return {
         chats: null,
-        error: 'User not found',
-        continueCursor: null,
-        isDone: true,
-        pageStatus: 'done',
       };
     }
 
-    const chatStream = stream(ctx.db, schema)
+    const chats = await stream(ctx.db, schema)
       .query('chats')
       .withIndex('by_user_type_lastMessageTime', (q): IndexRange => {
         if (args.mode === 'pinned') {
@@ -38,18 +28,10 @@ export const listChats = query({
       })
       .order('desc')
       .filterWith(async (chat) => !chat.deleteTime && chat.source !== 'share')
-      .paginate({
-        numItems: args.paginationOpts?.limit ?? 10,
-        cursor: args.paginationOpts?.cursor ?? null,
-      });
-
-    const { page, continueCursor, isDone, pageStatus } = await chatStream;
+      .collect();
 
     return {
-      chats: page,
-      continueCursor,
-      isDone,
-      pageStatus,
+      chats,
     };
   },
 });

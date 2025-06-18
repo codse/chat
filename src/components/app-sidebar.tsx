@@ -77,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={openNewChat}
               className="max-w-fit inline-block px-2 py-4 font-bold text-primary"
             >
-              Fast Chat
+              Ch4t
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -101,12 +101,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
-        <Suspense>
-          <ChatList mode="pinned" />
-        </Suspense>
-        <Suspense>
-          <ChatList mode="recent" />
-        </Suspense>
+        <ChatList mode="pinned" />
+        <ChatList mode="recent" />
         <Suspense>
           <ChatListItemActions />
         </Suspense>

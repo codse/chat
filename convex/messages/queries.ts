@@ -7,10 +7,6 @@ import { getAuthUserId } from '@convex-dev/auth/server';
 export const getChatMessages = query({
   args: {
     chatId: v.id('chats'),
-    paginationOpts: v.object({
-      numItems: v.number(),
-      cursor: v.union(v.string(), v.null()),
-    }),
   },
   handler: async (ctx, args) => {
     const chat = await ctx.db.get(args.chatId);
@@ -30,11 +26,6 @@ export const getChatMessages = query({
       }
     }
 
-    const paginationOpts = {
-      numItems: args.paginationOpts?.numItems ?? 10,
-      cursor: args.paginationOpts?.cursor,
-    };
-
     const referenceId = chat.referenceId;
     const parentId = chat.parentId;
 
@@ -53,7 +44,7 @@ export const getChatMessages = query({
       const response = await mergedStream(
         [originalStream, newMessages],
         ['chatId', 'updateTime', '_creationTime', '_id']
-      ).paginate(paginationOpts);
+      ).collect();
 
       return response;
     }
@@ -62,7 +53,7 @@ export const getChatMessages = query({
       .query('messages')
       .withIndex('by_chat_update_time', (q) => q.eq('chatId', args.chatId))
       .order('asc')
-      .paginate(paginationOpts);
+      .collect();
 
     return response;
   },
