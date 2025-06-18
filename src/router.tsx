@@ -10,9 +10,10 @@ import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
 import { Doc } from '@convex/_generated/dataModel';
+import { lazy } from 'react';
 
-const DefaultCatchBoundary = () => <div>DefaultCatchBoundary</div>;
-const NotFound = () => <div>NotFound</div>;
+const LazyErrorPage = lazy(() => import('@/components/error'));
+const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
 
 export function createRouter() {
   if (typeof document !== 'undefined') {
@@ -52,8 +53,9 @@ export function createRouter() {
     createTanStackRouter({
       routeTree,
       defaultPreload: 'intent',
-      defaultErrorComponent: DefaultCatchBoundary,
-      defaultNotFoundComponent: () => <NotFound />,
+      defaultErrorComponent: LazyErrorPage,
+      defaultNotFoundComponent: LazyNotFoundPage,
+      defaultPendingComponent: () => <div>Loading...</div>,
       context: {
         queryClient,
         convexQueryClient,
