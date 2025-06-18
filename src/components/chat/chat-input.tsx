@@ -113,7 +113,7 @@ export function ChatInput({
       }
     },
     onError: (error, variables) => {
-      if (variables.chatId === chatId) {
+      if (variables.chatId === chatId && !input.trim()) {
         setInput(variables.content);
       }
       toast.error(
