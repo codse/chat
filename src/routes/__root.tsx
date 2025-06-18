@@ -7,16 +7,19 @@ import {
 } from '@tanstack/react-router';
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 // import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import * as React from 'react';
+import { lazy } from 'react';
 import { Toaster } from 'sonner';
 import type { QueryClient } from '@tanstack/react-query';
 import { seo } from '@/utils/seo';
 import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import appCss from '@/styles/app.css?url';
-import { Authenticated, AuthLoading, Unauthenticated } from 'convex/react';
+import { Unauthenticated } from 'convex/react';
 import { LoginAnonymously } from '@/components/auth/anonymous';
 import { AppProvider } from '@/context/app-context';
+
+const LazyErrorPage = lazy(() => import('@/components/error'));
+const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -62,14 +65,14 @@ export const Route = createRootRouteWithContext<{
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
-  errorComponent: (props) => {
+  errorComponent: () => {
     return (
       <RootDocument>
-        <div>Error</div>
+        <LazyErrorPage />
       </RootDocument>
     );
   },
-  notFoundComponent: () => <div>Not Found</div>,
+  notFoundComponent: LazyNotFoundPage,
   component: RootComponent,
 });
 
@@ -80,17 +83,12 @@ function RootComponent() {
   return (
     <ConvexAuthProvider client={convexQueryClient.convexClient}>
       <RootDocument>
-        <AuthLoading>
-          <div className="h-dvh w-full bg-background" />
-        </AuthLoading>
-        <Authenticated>
-          <AppProvider>
-            <Outlet />
-          </AppProvider>
-        </Authenticated>
-        <Unauthenticated>
-          <LoginAnonymously />
-        </Unauthenticated>
+        <AppProvider>
+          <Outlet />
+          <Unauthenticated>
+            <LoginAnonymously />
+          </Unauthenticated>
+        </AppProvider>
       </RootDocument>
     </ConvexAuthProvider>
   );
