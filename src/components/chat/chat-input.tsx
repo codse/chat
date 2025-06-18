@@ -22,6 +22,20 @@ import { toast } from 'sonner';
 import { useModelInfo } from './hooks/use-model-info';
 import { useDebounce } from 'use-debounce';
 
+const focusInput = () => {
+  const textArea = document.getElementById(
+    'text-area'
+  ) as HTMLTextAreaElement | null;
+
+  if (!textArea) {
+    return;
+  }
+
+  textArea.focus();
+  textArea.selectionStart = textArea.value.length;
+  textArea.selectionEnd = textArea.value.length;
+};
+
 export function ChatInput({
   chatId,
   defaultPrompt,
@@ -39,7 +53,6 @@ export function ChatInput({
   const { chat } = useLazyChatContext();
   const { model, fileUploads, webSearch, modelId, setModelId, available } =
     useModelInfo(initialModel, chat?.model);
-  const textInputRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     attachments,
@@ -135,7 +148,7 @@ export function ChatInput({
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
       handleFiles(newFiles);
-      textInputRef.current?.focus();
+      focusInput();
     }
   };
 
@@ -144,16 +157,9 @@ export function ChatInput({
       event.preventDefault();
       const newFiles = Array.from(event.clipboardData.files);
       handleFiles(newFiles);
-      textInputRef.current?.focus();
+      focusInput();
     }
   };
-
-  useEffect(() => {
-    if (defaultPrompt?.length && textInputRef.current) {
-      textInputRef.current.selectionStart = textInputRef.current.value.length;
-      textInputRef.current.selectionEnd = textInputRef.current.value.length;
-    }
-  }, [defaultPrompt?.length]);
 
   const [debouncedInput] = useDebounce(input, 250, {
     maxWait: 1000,
@@ -184,11 +190,14 @@ export function ChatInput({
       />
 
       <PromptInputTextarea
-        ref={textInputRef}
         autoFocus
+        defaultValue={input}
         placeholder="Type your message here..."
         className="text-muted-foreground placeholder:text-muted-foreground/50 font-medium"
         onPaste={handlePaste}
+        // Passing the ref breaks is internal ref logic. We can either update that to use forwardRef
+        // or just use id to focus the input (which is what we do here)
+        id="text-area"
       />
 
       <PromptInputActions className="flex items-center justify-between gap-2 pt-2">

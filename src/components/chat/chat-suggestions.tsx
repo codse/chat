@@ -75,7 +75,12 @@ export function ChatSuggestions({
 
   return (
     <div
-      className="flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center animate-in fade-in-60 zoom-in-90"
+      className={cn(
+        'flex w-fit max-w-xl px-4 flex-col space-y-4 mx-auto flex-1 justify-center',
+        {
+          'animate-in fade-in-60 zoom-in-90': key > 0,
+        }
+      )}
       key={`suggestions-${key}`}
     >
       <div className="flex flex-wrap gap-2 px-2">

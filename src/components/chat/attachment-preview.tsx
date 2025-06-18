@@ -102,7 +102,7 @@ export function AttachmentPreview({
       {isUploading && (
         <div className="bg-secondary flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm">
           <Loader className="size-4 animate-spin" />
-          <span>Uploading...</span>
+          <span>Uploading {attachments?.length} files...</span>
         </div>
       )}
     </div>
