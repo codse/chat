@@ -68,13 +68,16 @@ export default function ChatShare({ chatId }: { chatId: Id<'chats'> }) {
               after sharing will remain private.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center space-x-2">
-            <div className="grid flex-1 gap-2">
-              <Input key={shareUrl} defaultValue={shareUrl} readOnly />
-            </div>
+          <div className="flex items-center gap-2 flex-col md:flex-row">
+            <Input
+              className="w-full text-muted-foreground font-light"
+              key={shareUrl}
+              defaultValue={shareUrl}
+              readOnly
+            />
             <Button
               size="sm"
-              className="px-3"
+              className="px-3 w-full md:w-auto"
               onClick={() => {
                 if (isCreatingLink) {
                   return;

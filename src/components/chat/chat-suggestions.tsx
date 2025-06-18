@@ -95,7 +95,7 @@ export function ChatSuggestions({
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
           <button
-            className="flex w-full max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="flex w-full text-left max-w-fit gap-2 rounded-lg bg-transparent px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
             key={option}
             onClick={() => onSuggestionClick(option + ' ')}
           >

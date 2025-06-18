@@ -1,7 +1,11 @@
 import { createFileRoute, useSearch } from '@tanstack/react-router';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 import { ChatSuggestions } from '@/components/chat/chat-suggestions';
 import { ChatInput } from '@/components/chat/chat-input';
 import { useState } from 'react';
@@ -34,7 +38,8 @@ function Chat() {
     >
       <AppSidebar variant="sidebar" />
       <SidebarInset>
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col relative">
+          <SidebarTrigger className="absolute top-4 left-4 bg-accent md:invisible" />
           <div className="@container/main flex flex-1 flex-col gap-2 [data-state=collapsed]:hidden">
             <ChatSuggestions onSuggestionClick={setSelectedSuggestion} />
           </div>

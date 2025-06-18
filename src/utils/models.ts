@@ -11,7 +11,8 @@ export type ModelCapability =
   | 'file'
   | 'text'
   | 'search'
-  | 'reasoning';
+  | 'reasoning'
+  | 'image';
 
 export type InternalCapability = 'tool-call' | 'cite-source';
 
@@ -33,7 +34,7 @@ export const supportedModels: Record<string, ModelProvider> = {
     },
     models: [
       {
-        supports: ['vision', 'file', 'text'],
+        supports: ['vision', 'file', 'text', 'search'],
         id: 'google/gemini-2.5-flash-preview-05-20',
         capabilities: ['tool-call'],
         name: 'Gemini 2.5 Flash',
@@ -97,8 +98,8 @@ export const supportedModels: Record<string, ModelProvider> = {
       {
         supports: ['text', 'search'],
         capabilities: ['cite-source'],
-        id: 'openai/gpt-4o-search-preview',
-        name: 'GPT-4o Search (Preview)',
+        id: 'openai/gpt-4o-mini-search-preview',
+        name: 'GPT-4o Mini Search',
         recommended: true,
       },
     ],
@@ -202,4 +203,7 @@ export const recommendedModelList = Object.values(supportedModels)
       };
     });
   })
-  .filter((model) => model.recommended);
+  .filter((model) => model.recommended)
+  .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+export const defaultModelId = 'openai/gpt-4o-mini';

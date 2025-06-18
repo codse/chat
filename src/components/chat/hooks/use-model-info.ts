@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAppContext } from '@/context/app-context';
-import { recommendedModelList } from '@/utils/models';
+import { defaultModelId, recommendedModelList } from '@/utils/models';
 import { checkFileUploads, checkWebSearch } from '../chat.utils';
 import { toast } from 'sonner';
 import { LocalStorage } from '@/utils/local-storage';
@@ -13,7 +13,7 @@ export function useModelInfo(
     initialModel ||
       LocalStorage.currentModel.get() ||
       LocalStorage.model.get() ||
-      recommendedModelList[0]?.id
+      defaultModelId
   );
 
   const { userKeys } = useAppContext();

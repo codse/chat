@@ -1,4 +1,3 @@
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import {
   Outlet,
   createRootRouteWithContext,
@@ -6,7 +5,8 @@ import {
   Scripts,
   useRouteContext,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
+// import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
+// import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import * as React from 'react';
 import { Toaster } from 'sonner';
 import type { QueryClient } from '@tanstack/react-query';
@@ -109,8 +109,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <Toaster richColors />
           </div>
         </div>
-        <ReactQueryDevtools buttonPosition="top-left" />
-        <TanStackRouterDevtools position="top-left" />
+        {/* <ReactQueryDevtools buttonPosition="top-left" />
+        <TanStackRouterDevtools position="top-left" /> */}
         <Scripts />
       </body>
     </html>

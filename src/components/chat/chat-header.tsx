@@ -14,29 +14,29 @@ export function ChatHeader({ chatId }: { chatId: Id<'chats'> }) {
     shouldThrow: false,
   });
   const isSharedChat = Boolean(match);
-
   return (
-    <header className="py-4 w-full border-b border-border sticky z-10 chat-header flex px-4">
-      <SidebarTrigger className="size-10 absolute left-4 top-1/2 -translate-y-1/2" />
-      <div className="flex flex-1 items-center gap-2 max-w-[var(--breakpoint-md)] mx-auto justify-between px-4">
+    <header className="py-4 w-full border-b border-border chat-header sticky top-0 z-40">
+      <SidebarTrigger className="size-10 absolute left-2 md:left-4 top-1/2 -translate-y-1/2" />
+      <div className="grid grid-cols-[32px_1fr_auto] items-center gap-4 max-w-[var(--breakpoint-md)] mx-auto px-4">
+        <span />
         {isLoading ? (
-          <Skeleton className="h-6 w-40 mx-4" />
+          <Skeleton className="h-6 w-40" />
         ) : (
           <Button
             variant="link"
-            className="text-foreground no-underline text-base"
+            className="text-foreground truncate text-base no-underline justify-start px-0"
             asChild
           >
             <Link
               to={isSharedChat ? '/share/$chatId' : '/chat/$chatId'}
               params={{ chatId: chat._id }}
             >
-              {chat?.title}
+              <span className="truncate">{chat?.title}</span>
             </Link>
           </Button>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <ChatShare chatId={chatId} />
         </div>
       </div>
