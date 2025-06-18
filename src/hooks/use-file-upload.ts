@@ -70,6 +70,7 @@ export function useFileUpload() {
   };
 
   const removeAttachment = (fileId: Id<'_storage'>) => {
+    const current = [...attachments];
     setAttachments((prev) => prev.filter((att) => att.fileId !== fileId));
     removeFile({ fileId })
       .then(() => {
@@ -78,6 +79,7 @@ export function useFileUpload() {
       .catch((error) => {
         toast.error('Failed to remove file');
         console.error(error);
+        setAttachments(current);
       });
   };
 
