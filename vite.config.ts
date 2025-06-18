@@ -8,7 +8,7 @@ export default defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tanstackStart({
-      target: 'vercel',
+      target: 'cloudflare-pages',
       tsr: {
         routesDirectory: 'src/routes',
       },
