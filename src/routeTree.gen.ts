@@ -9,125 +9,101 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ShareRouteRouteImport } from './routes/share/route'
 import { Route as LoginRouteRouteImport } from './routes/login/route'
-import { Route as ChatRouteRouteImport } from './routes/chat/route'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ShareChatIdRouteImport } from './routes/share/$chatId'
+import { Route as AppRouteRouteImport } from './routes/_app/route'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as SessionSessionIdRouteImport } from './routes/session/$sessionId'
-import { Route as ChatChatIdRouteImport } from './routes/chat/$chatId'
+import { Route as AppShareChatIdRouteImport } from './routes/_app/share/$chatId'
+import { Route as AppChatChatIdRouteImport } from './routes/_app/chat/$chatId'
 
-const ShareRouteRoute = ShareRouteRouteImport.update({
-  id: '/share',
-  path: '/share',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRouteRoute = LoginRouteRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatRouteRoute = ChatRouteRouteImport.update({
-  id: '/chat',
-  path: '/chat',
+const AppRouteRoute = AppRouteRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShareChatIdRoute = ShareChatIdRouteImport.update({
-  id: '/$chatId',
-  path: '/$chatId',
-  getParentRoute: () => ShareRouteRoute,
+  getParentRoute: () => AppRouteRoute,
 } as any)
 const SessionSessionIdRoute = SessionSessionIdRouteImport.update({
   id: '/session/$sessionId',
   path: '/session/$sessionId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatChatIdRoute = ChatChatIdRouteImport.update({
-  id: '/$chatId',
-  path: '/$chatId',
-  getParentRoute: () => ChatRouteRoute,
+const AppShareChatIdRoute = AppShareChatIdRouteImport.update({
+  id: '/share/$chatId',
+  path: '/share/$chatId',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppChatChatIdRoute = AppChatChatIdRouteImport.update({
+  id: '/chat/$chatId',
+  path: '/chat/$chatId',
+  getParentRoute: () => AppRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/chat': typeof ChatRouteRouteWithChildren
+  '': typeof AppRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
-  '/share': typeof ShareRouteRouteWithChildren
-  '/chat/$chatId': typeof ChatChatIdRoute
   '/session/$sessionId': typeof SessionSessionIdRoute
-  '/share/$chatId': typeof ShareChatIdRoute
+  '/': typeof AppIndexRoute
+  '/chat/$chatId': typeof AppChatChatIdRoute
+  '/share/$chatId': typeof AppShareChatIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/chat': typeof ChatRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
-  '/share': typeof ShareRouteRouteWithChildren
-  '/chat/$chatId': typeof ChatChatIdRoute
   '/session/$sessionId': typeof SessionSessionIdRoute
-  '/share/$chatId': typeof ShareChatIdRoute
+  '/': typeof AppIndexRoute
+  '/chat/$chatId': typeof AppChatChatIdRoute
+  '/share/$chatId': typeof AppShareChatIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/chat': typeof ChatRouteRouteWithChildren
+  '/_app': typeof AppRouteRouteWithChildren
   '/login': typeof LoginRouteRoute
-  '/share': typeof ShareRouteRouteWithChildren
-  '/chat/$chatId': typeof ChatChatIdRoute
   '/session/$sessionId': typeof SessionSessionIdRoute
-  '/share/$chatId': typeof ShareChatIdRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/chat/$chatId': typeof AppChatChatIdRoute
+  '/_app/share/$chatId': typeof AppShareChatIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/chat'
+    | ''
     | '/login'
-    | '/share'
-    | '/chat/$chatId'
     | '/session/$sessionId'
+    | '/'
+    | '/chat/$chatId'
     | '/share/$chatId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/chat'
     | '/login'
-    | '/share'
-    | '/chat/$chatId'
     | '/session/$sessionId'
+    | '/'
+    | '/chat/$chatId'
     | '/share/$chatId'
   id:
     | '__root__'
-    | '/'
-    | '/chat'
+    | '/_app'
     | '/login'
-    | '/share'
-    | '/chat/$chatId'
     | '/session/$sessionId'
-    | '/share/$chatId'
+    | '/_app/'
+    | '/_app/chat/$chatId'
+    | '/_app/share/$chatId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ChatRouteRoute: typeof ChatRouteRouteWithChildren
+  AppRouteRoute: typeof AppRouteRouteWithChildren
   LoginRouteRoute: typeof LoginRouteRoute
-  ShareRouteRoute: typeof ShareRouteRouteWithChildren
   SessionSessionIdRoute: typeof SessionSessionIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/share': {
-      id: '/share'
-      path: '/share'
-      fullPath: '/share'
-      preLoaderRoute: typeof ShareRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -135,26 +111,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AppRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/share/$chatId': {
-      id: '/share/$chatId'
-      path: '/$chatId'
-      fullPath: '/share/$chatId'
-      preLoaderRoute: typeof ShareChatIdRouteImport
-      parentRoute: typeof ShareRouteRoute
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRouteRoute
     }
     '/session/$sessionId': {
       id: '/session/$sessionId'
@@ -163,45 +132,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SessionSessionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat/$chatId': {
-      id: '/chat/$chatId'
-      path: '/$chatId'
+    '/_app/share/$chatId': {
+      id: '/_app/share/$chatId'
+      path: '/share/$chatId'
+      fullPath: '/share/$chatId'
+      preLoaderRoute: typeof AppShareChatIdRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/chat/$chatId': {
+      id: '/_app/chat/$chatId'
+      path: '/chat/$chatId'
       fullPath: '/chat/$chatId'
-      preLoaderRoute: typeof ChatChatIdRouteImport
-      parentRoute: typeof ChatRouteRoute
+      preLoaderRoute: typeof AppChatChatIdRouteImport
+      parentRoute: typeof AppRouteRoute
     }
   }
 }
 
-interface ChatRouteRouteChildren {
-  ChatChatIdRoute: typeof ChatChatIdRoute
+interface AppRouteRouteChildren {
+  AppIndexRoute: typeof AppIndexRoute
+  AppChatChatIdRoute: typeof AppChatChatIdRoute
+  AppShareChatIdRoute: typeof AppShareChatIdRoute
 }
 
-const ChatRouteRouteChildren: ChatRouteRouteChildren = {
-  ChatChatIdRoute: ChatChatIdRoute,
+const AppRouteRouteChildren: AppRouteRouteChildren = {
+  AppIndexRoute: AppIndexRoute,
+  AppChatChatIdRoute: AppChatChatIdRoute,
+  AppShareChatIdRoute: AppShareChatIdRoute,
 }
 
-const ChatRouteRouteWithChildren = ChatRouteRoute._addFileChildren(
-  ChatRouteRouteChildren,
-)
-
-interface ShareRouteRouteChildren {
-  ShareChatIdRoute: typeof ShareChatIdRoute
-}
-
-const ShareRouteRouteChildren: ShareRouteRouteChildren = {
-  ShareChatIdRoute: ShareChatIdRoute,
-}
-
-const ShareRouteRouteWithChildren = ShareRouteRoute._addFileChildren(
-  ShareRouteRouteChildren,
+const AppRouteRouteWithChildren = AppRouteRoute._addFileChildren(
+  AppRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ChatRouteRoute: ChatRouteRouteWithChildren,
+  AppRouteRoute: AppRouteRouteWithChildren,
   LoginRouteRoute: LoginRouteRoute,
-  ShareRouteRoute: ShareRouteRouteWithChildren,
   SessionSessionIdRoute: SessionSessionIdRoute,
 }
 export const routeTree = rootRouteImport

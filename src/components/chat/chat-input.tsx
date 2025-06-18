@@ -63,7 +63,7 @@ export function ChatInput({
     reset: resetFiles,
   } = useFileUpload();
   const match = useMatch({
-    from: '/share/$chatId',
+    from: '/_app/share/$chatId',
     shouldThrow: false,
   });
 
