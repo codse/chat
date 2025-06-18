@@ -13,14 +13,12 @@ export function ChatView({ chatId }: { chatId: string }) {
 
   return (
     <ChatProvider
-      key={chatId}
       chatId={chatId}
       className="flex-1 flex flex-col h-full bg-background absolute w-full overflow-hidden"
     >
       <ChatHeader chatId={chatId as Id<'chats'>} />
       <Suspense fallback={<MessageSkeleton />}>
         <ChatMessages
-          key={chatId}
           chatId={chatId}
           initialMessage={initialMessage}
           referenceId={

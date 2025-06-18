@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_app/share/$chatId')({
   component: ChatPage,
   notFoundComponent: ChatNotFound,
   errorComponent: ChatError,
-  pendingComponent: ChatPageSkeleton,
+  pendingComponent: () => <ChatPageSkeleton noSideBar />,
 });
 
 function ChatPage() {
