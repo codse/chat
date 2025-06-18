@@ -193,7 +193,7 @@ export function ChatInput({
                 }}
               >
                 <span>
-                  <Paperclip className="text-primary size-3.5" />
+                  <Paperclip className="size-3.5" />
                 </span>
               </Button>
               <input
@@ -240,9 +240,11 @@ export function ChatInput({
 
         <PromptInputAction
           tooltip={
-            !available
-              ? 'Model is not available. Please select a different model or set your API keys in the sidebar.'
-              : 'Send message'
+            isUploading
+              ? 'Please wait for files to upload...'
+              : !available
+                ? 'Model is not available. Please select a different model or set your API keys in the sidebar.'
+                : 'Send message'
           }
         >
           <Button
@@ -252,7 +254,7 @@ export function ChatInput({
               'cursor-not-allowed opacity-50': !available,
             })}
             onClick={handleSubmit}
-            disabled={isPending || isUploading}
+            disabled={isPending}
           >
             {isPending || isUploading ? (
               <Square className="size-5 fill-current" />
