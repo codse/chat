@@ -7,9 +7,9 @@ import {
 import { routerWithQueryClient } from '@tanstack/react-router-with-query';
 import { toast } from 'sonner';
 import { ConvexQueryClient } from '@convex-dev/react-query';
-import { ConvexProvider, ConvexReactClient } from 'convex/react';
+import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
-import { Doc, Id } from '@convex/_generated/dataModel';
+import { Doc } from '@convex/_generated/dataModel';
 
 const DefaultCatchBoundary = () => <div>DefaultCatchBoundary</div>;
 const NotFound = () => <div>NotFound</div>;
