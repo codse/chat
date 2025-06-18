@@ -2,20 +2,16 @@
 
 import { Markdown } from '@/components/ui/markdown';
 import { Message, MessageContent } from '@/components/ui/message';
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningResponse,
-  ReasoningTrigger,
-} from '../ui/reasoning';
+import { Reasoning, ReasoningContent, ReasoningTrigger } from '../ui/reasoning';
 import { cn } from '@/lib/utils';
 import { Loader } from '@/components/ui/loader';
 import { Message as MessageType } from '@/types/chat';
 import { AttachmentPreview } from './attachment-preview';
 import { getModelName } from '@/utils/models';
 import { Button } from '../ui/button';
-import { GitBranch, Copy } from 'lucide-react';
+import { Split, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 export default function ChatMessage({
   message,
@@ -84,29 +80,39 @@ export default function ChatMessage({
                   }
                 )}
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBranch}
-                  disabled={isBranching}
-                >
-                  <GitBranch />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="me-1"
-                  onClick={() => {
-                    if (!message?.content) {
-                      toast.error('No content to copy');
-                      return;
-                    }
-                    navigator.clipboard.writeText(message.content);
-                    toast.success('Copied to clipboard');
-                  }}
-                >
-                  <Copy />
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onBranch}
+                      disabled={isBranching}
+                    >
+                      <Split className="size-4 rotate-180" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Branch from this message</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => {
+                        if (!message?.content) {
+                          toast.error('No content to copy');
+                          return;
+                        }
+                        navigator.clipboard.writeText(message.content);
+                        toast.success('Copied to clipboard');
+                      }}
+                    >
+                      <Copy />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Copy message</TooltipContent>
+                </Tooltip>
                 {getModelName(message.model)}
               </div>
             )}
