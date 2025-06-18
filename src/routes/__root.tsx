@@ -32,8 +32,8 @@ export const Route = createRootRouteWithContext<{
         content: 'width=device-width, initial-scale=1',
       },
       ...seo({
-        title: 'Chat with AI',
-        description: `Chat with AI`,
+        title: 'Open Multi-Model Chat',
+        description: 'Chat with multiple AI models using Open Multi-Model Chat',
       }),
     ],
     links: [

@@ -4,10 +4,10 @@ export const seo = ({
   keywords,
   image,
 }: {
-  title: string
-  description?: string
-  image?: string
-  keywords?: string
+  title: string;
+  description?: string;
+  image?: string;
+  keywords?: string;
 }) => {
   const tags = [
     { title },
@@ -15,8 +15,11 @@ export const seo = ({
     { name: 'keywords', content: keywords },
     { name: 'twitter:title', content: title },
     { name: 'twitter:description', content: description },
-    { name: 'twitter:creator', content: '@tannerlinsley' },
-    { name: 'twitter:site', content: '@tannerlinsley' },
+    { name: 'twitter:creator', content: '@harimanok_' },
+    {
+      name: 'twitter:site',
+      content: 'https://ch4t.pages.dev',
+    },
     { name: 'og:type', content: 'website' },
     { name: 'og:title', content: title },
     { name: 'og:description', content: description },
@@ -27,7 +30,7 @@ export const seo = ({
           { name: 'og:image', content: image },
         ]
       : []),
-  ]
+  ];
 
-  return tags
-}
+  return tags;
+};
