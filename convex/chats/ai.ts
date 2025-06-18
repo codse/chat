@@ -296,10 +296,16 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
     // This will allow us to stream to the client without having to write to the DB every time.
     // https://www.npmjs.com/package/@convex-dev/persistent-text-streaming
 
+    let errorOccurred = false;
+
     const stream = streamText({
       ...config,
       messages: [systemMessage, ...messages.filter((m) => m !== null)] as any,
       onChunk: async (event) => {
+        if (errorOccurred) {
+          // short-circuit if error happened
+          return;
+        }
         let current = '';
         if (event.chunk.type === 'reasoning') {
           current = event.chunk.textDelta;
@@ -332,6 +338,7 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
         }
       },
       onFinish: async (event) => {
+        if (errorOccurred) return;
         await ctx.runMutation(internal.messages.mutations.updateMessage, {
           messageId: message._id,
           status: 'completed',
@@ -343,6 +350,7 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
         });
       },
       onError: async (event) => {
+        errorOccurred = true;
         console.error(
           'There was an error generating the response.',
           (event.error as Error)?.message
@@ -366,10 +374,20 @@ You are **${selectedModel?.name}**, a powerful AI assistant. You help users solv
       // Convex doesn't keep the process alive, so we need to keep the reader alive.
       // This is a hack to keep the process alive.
       // TODO: find a better way to do this.
+
+      if (errorOccurred) {
+        break;
+      }
+
       const { done } = await reader.read();
       if (done) {
         break;
       }
+    }
+
+    if (errorOccurred) {
+      // stop further execution after error
+      return;
     }
 
     const [steps, _sources, files] = await Promise.all([
