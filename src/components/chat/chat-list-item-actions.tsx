@@ -9,12 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import { Button } from '../ui/button';
-import { useMutation } from '@tanstack/react-query';
-import { useConvexMutation } from '@convex-dev/react-query';
 import { Chat } from '@/types/chat';
 import { api } from '@convex/_generated/api';
 import { useNavigate } from '@tanstack/react-router';
 import { kSetChat } from './event.utils';
+import { useConvexMutation } from '@convex-dev/react-query';
+import { useMutation } from '@tanstack/react-query';
 
 export default function ChatListItemActions() {
   const navigate = useNavigate();
@@ -25,26 +25,155 @@ export default function ChatListItemActions() {
   }>();
 
   const { mutate: updateChatTitle } = useMutation({
-    mutationFn: useConvexMutation(api.chats.mutations.updateChatTitle),
+    mutationFn: useConvexMutation(
+      api.chats.mutations.updateChatTitle
+    ).withOptimisticUpdate((store, args) => {
+      const chat = store.getQuery(api.chats.queries.getChat, {
+        chatId: args.chatId,
+      });
+      if (chat !== undefined) {
+        store.setQuery(
+          api.chats.queries.getChat,
+          { chatId: args.chatId },
+          {
+            ...chat,
+            title: args.title,
+          }
+        );
+      }
+    }),
   });
 
-  const { mutate: deleteChat, isPending: isDeleting } = useMutation({
-    mutationFn: useConvexMutation(api.chats.mutations.deleteChat),
-    onSuccess: () => {
+  const { mutate: deleteChat } = useMutation({
+    mutationFn: useConvexMutation(
+      api.chats.mutations.deleteChat
+    ).withOptimisticUpdate((store, args) => {
+      const chat = store.getQuery(api.chats.queries.getChat, {
+        chatId: args.chatId,
+      });
+      if (chat !== undefined) {
+        store.setQuery(
+          api.chats.queries.getChat,
+          { chatId: args.chatId },
+          {
+            ...chat,
+            type: 'deleted',
+          }
+        );
+      }
+    }),
+  });
+
+  const { mutate: togglePin } = useMutation({
+    mutationFn: useConvexMutation(
+      api.chats.mutations.pinChat
+    ).withOptimisticUpdate((store, args) => {
+      const chat = store.getQuery(api.chats.queries.getChat, {
+        chatId: args.chatId,
+      });
+      if (chat !== undefined) {
+        store.setQuery(
+          api.chats.queries.getChat,
+          { chatId: args.chatId },
+          {
+            ...chat,
+            type: chat.type === 'pinned' ? undefined : 'pinned',
+          }
+        );
+      }
+
+      const setToList = (
+        mode: 'pinned' | 'recent',
+        chat: Chat | undefined,
+        chatId: string
+      ) => {
+        const list = store.getQuery(api.chats.queries.listChats, {
+          mode,
+          paginationOpts: { limit: 100, cursor: null },
+        });
+
+        if (list !== undefined) {
+          const updatedChats = [
+            ...(list.chats || []),
+            { ...chat, type: mode === 'pinned' ? 'pinned' : undefined },
+          ] as Chat[];
+
+          store.setQuery(
+            api.chats.queries.listChats,
+            { mode, paginationOpts: { limit: 100, cursor: null } },
+            {
+              ...list,
+              error: undefined,
+              continueCursor: list.continueCursor || '',
+              pageStatus: list.pageStatus as
+                | 'SplitRecommended'
+                | 'SplitRequired'
+                | null,
+              isDone: list.isDone,
+              chats: updatedChats
+                .filter(
+                  (chat) =>
+                    chat._id !== undefined && chat._creationTime !== undefined
+                )
+                .sort((a, b) => b._creationTime! - a._creationTime!),
+            }
+          );
+        }
+      };
+
+      const removeFromList = (mode: 'pinned' | 'recent', chatId: string) => {
+        const list = store.getQuery(api.chats.queries.listChats, {
+          mode,
+          paginationOpts: { limit: 100, cursor: null },
+        });
+
+        if (list !== undefined) {
+          const updatedChats = (list.chats || [])?.filter(
+            (c) => c._id !== chatId
+          ) as Chat[];
+
+          store.setQuery(
+            api.chats.queries.listChats,
+            { mode, paginationOpts: { limit: 100, cursor: null } },
+            {
+              ...list,
+              error: undefined,
+              continueCursor: list.continueCursor || '',
+              pageStatus: list.pageStatus as
+                | 'SplitRecommended'
+                | 'SplitRequired'
+                | null,
+              isDone: list.isDone,
+              chats: updatedChats
+                .filter(
+                  (chat) =>
+                    chat._id !== undefined && chat._creationTime !== undefined
+                )
+                .sort((a, b) => b._creationTime! - a._creationTime!),
+            }
+          );
+        }
+      };
+
+      // If chat was pinned, remove from pinned and add to recent
+      // If chat was not pinned, remove from recent and add to pinned
+      if (chat?.type === 'pinned') {
+        removeFromList('pinned', args.chatId);
+        setToList('recent', chat, args.chatId);
+      } else {
+        removeFromList('recent', args.chatId);
+        setToList('pinned', chat, args.chatId);
+      }
+    }),
+  });
+
+  const handleDelete = async () => {
+    if (state?.chat?._id) {
+      deleteChat({ chatId: state.chat._id });
       navigate({
         to: '/',
         replace: true,
       });
-    },
-  });
-
-  const { mutate: togglePin } = useMutation({
-    mutationFn: useConvexMutation(api.chats.mutations.pinChat),
-  });
-
-  const handleDelete = () => {
-    if (state?.chat?._id) {
-      deleteChat({ chatId: state.chat._id });
     }
     setState(undefined);
   };
@@ -104,11 +233,7 @@ export default function ChatListItemActions() {
             <DialogClose asChild>
               <Button variant="ghost">Cancel</Button>
             </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
+            <Button variant="destructive" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>
