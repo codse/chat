@@ -4,8 +4,12 @@ import { Anonymous } from '@convex-dev/auth/providers/Anonymous';
 import { MutationCtx, query, QueryCtx } from './_generated/server';
 import { PublicUser, UnauthenticatedUser } from '@/types/chat';
 import { Id } from './_generated/dataModel';
-import { mutation } from './_generated/server';
 import { v } from 'convex/values';
+
+export const MessageLimitPerDay = {
+  anonymous: 10,
+  authenticated: 50,
+};
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Google, Anonymous],
@@ -15,9 +19,15 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         return args.existingUserId;
       }
 
+      const isAnonymous = args.provider.id === 'anonymous';
+      const messagesPerDay = isAnonymous
+        ? MessageLimitPerDay.anonymous
+        : MessageLimitPerDay.authenticated;
       const userId = await ctx.db.insert('users', {
         ...args.profile,
-        isAnonymous: args.provider.id === 'anonymous',
+        isAnonymous,
+        messagesLeft: messagesPerDay,
+        messagesPerDay,
       });
 
       return userId;
