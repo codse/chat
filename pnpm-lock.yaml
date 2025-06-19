@@ -17,6 +17,12 @@ importers:
       '@convex-dev/auth':
         specifier: 0.0.87
         version: 0.0.87(@auth/core@0.37.0)(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+      '@convex-dev/persistent-text-streaming':
+        specifier: ^0.2.3
+        version: 0.2.3(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@convex-dev/rate-limiter':
+        specifier: ^0.2.10
+        version: 0.2.10(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@convex-dev/react-query':
         specifier: 0.0.0-alpha.8
         version: 0.0.0-alpha.8(@tanstack/react-query@5.66.0(react@19.1.0))(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
@@ -489,6 +495,22 @@ packages:
       '@auth/core': ^0.37.0
       convex: ^1.17.0
       react: ^18.2.0 || ^19.0.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+
+  '@convex-dev/persistent-text-streaming@0.2.3':
+    resolution: {integrity: sha512-v6by8JB2lXyd+ZBH0I5TOsd98zk+tvmfPt6ofRuxC2GtNkqUpy6F7CdijRaXiGW+ozlUiQyRsBzhvhTUwVUAHg==}
+    peerDependencies:
+      convex: '>=1.23.0 <1.35.0'
+      react: ~18.3.1 || ^19.0.0
+      react-dom: ~18.3.1 || ^19.0.0
+
+  '@convex-dev/rate-limiter@0.2.10':
+    resolution: {integrity: sha512-EU6wJ5XEAE1s1GnYW85w/PpcFs2/q6sJY9ndKX6oVk6nhhRmxmwNzwITl5/Y3ufS6BtoQ12sQ+0tqYy2SQWlkg==}
+    peerDependencies:
+      convex: ~1.16.5 || >=1.17.0 <1.35.0
+      react: ^18.3.1 || ^19.0.0
     peerDependenciesMeta:
       react:
         optional: true
@@ -5789,6 +5811,18 @@ snapshots:
       oslo: 1.2.1
       path-to-regexp: 6.3.0
       server-only: 0.0.1
+    optionalDependencies:
+      react: 19.1.0
+
+  '@convex-dev/persistent-text-streaming@0.2.3(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      convex: 1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+
+  '@convex-dev/rate-limiter@0.2.10(convex@1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      convex: 1.23.0(@clerk/clerk-react@5.31.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     optionalDependencies:
       react: 19.1.0
 
