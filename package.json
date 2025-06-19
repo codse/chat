@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npx convex dev --once && concurrently -r npm:dev:web npm:dev:db",
     "dev:web": "vite dev --port 3000",
-    "deploy": "pnpm build && npx wrangler pages deploy dist",
+    "deploy:site": "pnpm build && npx wrangler pages deploy dist",
     "dev:db": "convex dev",
     "build": "vite build",
     "start": "vite preview"
