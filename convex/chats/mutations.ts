@@ -1,8 +1,24 @@
 import { v } from 'convex/values';
-import { internalMutation, mutation } from '../_generated/server';
+import { internalMutation, mutation, MutationCtx } from '../_generated/server';
 import { internal } from '../_generated/api';
 import { Id } from '@convex/_generated/dataModel';
 import { checkChatPermissions } from './permissions';
+import { HOUR, RateLimiter } from '@convex-dev/rate-limiter';
+import { components } from '../_generated/api';
+
+const rateLimiter = new RateLimiter(components.rateLimiter, {
+  chatRequests: { kind: 'token bucket', rate: 100, period: HOUR },
+});
+
+const applyRateLimit = async (ctx: MutationCtx, userId: Id<'users'>) => {
+  const { ok, retryAfter } = await rateLimiter.limit(ctx, 'chatRequests', {
+    key: userId,
+  });
+
+  if (!ok) {
+    throw new Error(`Rate limit exceeded. Retry after ${retryAfter} seconds.`);
+  }
+};
 
 export const createChat = mutation({
   args: {
@@ -24,6 +40,9 @@ export const createChat = mutation({
     }
 
     const { user } = result.value;
+
+    await applyRateLimit(ctx, user._id);
+
     const sanitizedTitle = args.title.trim();
 
     const chatId = await ctx.db.insert('chats', {
@@ -71,6 +90,9 @@ export const updateChatTitle = mutation({
       throw result.error;
     }
 
+    const { user } = result.value;
+    await applyRateLimit(ctx, user._id);
+
     const sanitizedTitle = args.title.trim();
 
     await ctx.runMutation(internal.chats.mutations.updateChat, {
@@ -87,6 +109,9 @@ export const deleteChat = mutation({
     if (result.isErr()) {
       throw result.error;
     }
+
+    const { user } = result.value;
+    await applyRateLimit(ctx, user._id);
 
     // Mark the chat as deleted. This will be cleared by the cron job.
     await ctx.db.patch(args.chatId, {
@@ -148,6 +173,9 @@ export const shareChat = mutation({
       throw result.error;
     }
 
+    const { user } = result.value;
+    await applyRateLimit(ctx, user._id);
+
     const { chat } = result.value;
     const newChatId: Id<'chats'> = await ctx.runMutation(
       internal.chats.mutations.cloneChat,
@@ -175,6 +203,9 @@ export const branchChat = mutation({
     if (result.isErr()) {
       throw result.error;
     }
+
+    const { user } = result.value;
+    await applyRateLimit(ctx, user._id);
 
     const { chat } = result.value;
     console.log(
@@ -211,6 +242,10 @@ export const pinChat = mutation({
     if (result.isErr()) {
       throw result.error;
     }
+
+    const { user } = result.value;
+    await applyRateLimit(ctx, user._id);
+
     const { chat } = result.value;
 
     await ctx.db.patch(args.chatId, {

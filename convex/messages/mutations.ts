@@ -254,7 +254,6 @@ export const sendMessage = mutation({
       }
     }
 
-    // Only apply rate limits if user is NOT using their own key
     const { remainingMessages } = await applyRateLimit(
       ctx,
       userId,
