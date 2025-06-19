@@ -1,7 +1,7 @@
-import { api, internal } from '@convex/_generated/api';
+import { api, internal, components } from '@convex/_generated/api';
 import { Doc, Id } from '@convex/_generated/dataModel';
+
 import {
-  internalAction,
   internalMutation,
   mutation,
   MutationCtx,
@@ -10,6 +10,8 @@ import { v } from 'convex/values';
 import { MessageFields } from './table';
 import { ALLOWED_FILE_TYPES } from '@/utils/uploads';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { RateLimiter, HOUR } from '@convex-dev/rate-limiter';
+import { MessageLimitPerDay } from '@convex/auth';
 
 const createTemporaryTitle = (
   content: string,
@@ -66,6 +68,11 @@ const ensureChat = async (
 
   return { chatId, model: currentModel };
 };
+
+const rateLimiter = new RateLimiter(components.rateLimiter, {
+  sendMessageWithKeys: { kind: 'token bucket', rate: 100, period: HOUR },
+  sendMessageWithoutKeys: { kind: 'token bucket', rate: 10, period: HOUR },
+});
 
 export const addMessage = internalMutation({
   args: {
@@ -144,6 +151,69 @@ export const updateMessage = internalMutation({
   },
 });
 
+const applyRateLimit = async (
+  ctx: MutationCtx,
+  userId: Id<'users'>,
+  userKeys?: { openai?: string; openrouter?: string }
+) => {
+  const usingOwnKey = !!(userKeys?.openai || userKeys?.openrouter);
+  let remainingMessages: number | null = null;
+
+  // Hourly rate limit
+  const { ok, retryAfter } = await rateLimiter.limit(
+    ctx,
+    // Apply different rate limits for users with their own keys and without
+    // We want to apply limit on with keys because they might use invalid keys to
+    // abuse the API. We don't know whether the provided keys are valid (yet).
+    usingOwnKey ? 'sendMessageWithKeys' : 'sendMessageWithoutKeys',
+    {
+      key: userId,
+    }
+  );
+
+  if (!ok) {
+    throw new Error(
+      `Hourly rate limit exceeded. Try again in ${Math.ceil(
+        retryAfter / 1000 / 60
+      )} minutes.`
+    );
+  }
+
+  if (usingOwnKey) {
+    // No daily quota for users with their own keys
+    return { remainingMessages: null };
+  }
+
+  // Daily quota
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  let messagesPerDay = user.messagesPerDay;
+  if (messagesPerDay === undefined) {
+    // Backwards compatibility
+    messagesPerDay = user.isAnonymous
+      ? MessageLimitPerDay.anonymous
+      : MessageLimitPerDay.authenticated;
+  }
+
+  // Use messagesPerDay as the default value for messagesLeft
+  remainingMessages = user.messagesLeft ?? messagesPerDay;
+  if (remainingMessages <= 0) {
+    throw new Error('Daily message quota exceeded.');
+  }
+
+  remainingMessages = Math.max(0, remainingMessages - 1);
+
+  await ctx.db.patch(userId, {
+    messagesPerDay,
+    messagesLeft: remainingMessages,
+  });
+
+  return { remainingMessages };
+};
+
 export const sendMessage = mutation({
   args: {
     attachments: MessageFields.attachments,
@@ -158,10 +228,15 @@ export const sendMessage = mutation({
     ),
     search: v.optional(v.boolean()),
   },
-  handler: async (ctx, args): Promise<Doc<'messages'> | null> => {
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    message: Doc<'messages'> | null;
+    remainingMessages: number | null;
+  }> => {
     const userId = await getAuthUserId(ctx);
 
-    // We will check permissions later in the addMessage mutation because it this point the chat might not exist yet.
     if (!userId) {
       throw new Error('Not authenticated');
     }
@@ -179,17 +254,31 @@ export const sendMessage = mutation({
       }
     }
 
-    return ctx.runMutation(internal.messages.mutations.addMessage, {
-      chatId: args.chatId,
-      role: 'user',
+    const { remainingMessages } = await applyRateLimit(
+      ctx,
       userId,
-      content: String(args.content || '').trim(),
-      attachments: args.attachments,
-      model: args.model,
-      status: 'completed',
-      userKeys: args.userKeys,
-      search: args.search,
-    });
+      args.userKeys
+    );
+
+    const message = await ctx.runMutation(
+      internal.messages.mutations.addMessage,
+      {
+        chatId: args.chatId,
+        role: 'user',
+        userId,
+        content: String(args.content || '').trim(),
+        attachments: args.attachments,
+        model: args.model,
+        status: 'completed',
+        userKeys: args.userKeys,
+        search: args.search,
+      }
+    );
+
+    return {
+      message,
+      remainingMessages,
+    };
   },
 });
 

@@ -19,4 +19,11 @@ crons.interval(
   internal.linking.mutations.clearStaleSessions
 );
 
+// Reset messagesLeft for all users at midnight
+crons.interval(
+  'reset-messages-left',
+  { hours: 24 },
+  internal.users.resetMessages.resetMessagesLeft
+);
+
 export default crons;

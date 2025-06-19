@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/sidebar';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Edit, KeyRound, BadgeCheck } from 'lucide-react';
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
 import { Skeleton } from './ui/skeleton';
-import { openNewChat } from './chat/event.utils';
+import { kOpenByokModal, openNewChat } from './chat/event.utils';
 import BYOKDialog from './byok-dialog';
 import { LocalStorage } from '@/utils/local-storage';
 import { Button } from './ui/button';
@@ -51,11 +51,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [navigate]);
 
   React.useEffect(() => {
+    const openByokModal = () => {
+      setByokOpen(true);
+    };
+    window.addEventListener(kOpenByokModal, openByokModal);
+    return () => window.removeEventListener(kOpenByokModal, openByokModal);
+  }, []);
+
+  React.useEffect(() => {
     const keys = LocalStorage.byok.get();
     setHasKeys(Boolean(keys.openai || keys.openrouter));
   }, [byokOpen]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const preload = async () => {
       await import('./chat/chat-view');
     };
