@@ -10,11 +10,9 @@ import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexReactClient } from 'convex/react';
 import { routeTree } from './routeTree.gen';
 import { Doc } from '@convex/_generated/dataModel';
-import { lazy } from 'react';
 import { Skeleton } from './components/ui/skeleton';
-
-const LazyErrorPage = lazy(() => import('@/components/error'));
-const LazyNotFoundPage = lazy(() => import('@/components/not-found'));
+import ErrorPage from '@/components/error';
+import NotFoundPage from '@/components/not-found';
 
 export function createRouter() {
   if (typeof document !== 'undefined') {
@@ -54,8 +52,8 @@ export function createRouter() {
     createTanStackRouter({
       routeTree,
       defaultPreload: 'intent',
-      defaultErrorComponent: LazyErrorPage,
-      defaultNotFoundComponent: LazyNotFoundPage,
+      defaultErrorComponent: ErrorPage,
+      defaultNotFoundComponent: NotFoundPage,
       defaultPendingComponent: () => (
         <div className="grid h-full w-full grid-cols-[auto_1fr]">
           <div className="border-r h-full w-[calc(var(--spacing)*72)]">
