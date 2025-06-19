@@ -32,8 +32,10 @@ export function ChatMessages({
     ...convexQuery(api.messages.queries.getChatMessages, {
       chatId: chatId as Id<'chats'>,
     }),
-    staleTime: 3000,
-    gcTime: 3000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: false,
+    staleTime: 15 * 1000,
+    gcTime: 30 * 1000,
     initialData: initialMessage ? [initialMessage] : [],
   });
 

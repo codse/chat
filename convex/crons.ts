@@ -6,7 +6,7 @@ const crons = cronJobs();
 crons.interval(
   'clear-delete-chats',
   {
-    minutes: 5,
+    minutes: 30,
   },
   internal.chats.delete.clearDeletedChats
 );

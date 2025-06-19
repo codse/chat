@@ -171,7 +171,7 @@ function ChatListItemComponent({
             LocalStorage.currentModel.set(chat.model);
           }}
           preload="intent"
-          preloadDelay={150}
+          preloadDelay={75}
           className="w-full text-sm px-0 py-0"
         >
           {isEditing ? (

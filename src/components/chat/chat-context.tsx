@@ -20,7 +20,7 @@ function LazyLoadChat({ chatId }: { chatId: Id<'chats'> }) {
 
   const { data: chat } = useSuspenseQuery({
     ...convexQuery(api.chats.queries.getChat, {
-      chatId: chatId,
+      chatId,
     }),
   });
 
