@@ -60,6 +60,7 @@ export function ChatInput({
     show: true,
     count: location.state?.remainingMessages,
   });
+  const lastCount = useRef(leftAlert.count);
 
   const {
     attachments,
@@ -137,9 +138,16 @@ export function ChatInput({
       }
     },
     onError: (error, variables) => {
-      if (variables.chatId === chatId && !input.trim()) {
-        setInput(variables.content);
+      if (variables.chatId === chatId) {
+        if (!input.trim()) {
+          setInput(variables.content);
+        }
+        setLeftAlert((current) => ({
+          ...current,
+          count: lastCount.current,
+        }));
       }
+
       if (error.message?.includes('exceeded')) {
         toast.error(
           'Daily message quota exceeded. Please login to increase your limit or use your own API keys.'
@@ -168,9 +176,13 @@ export function ChatInput({
     LocalStorage.model.clear();
     LocalStorage.currentModel.clear();
     const userKeys = LocalStorage.byok.get();
+    lastCount.current = leftAlert.count;
     setLeftAlert((current) => ({
       ...current,
-      count: current.count ? Math.max(0, current.count - 1) : 0,
+      count:
+        typeof current.count === 'number'
+          ? Math.max(0, current.count - 1)
+          : null,
     }));
     sendMessage({
       chatId: chatId as Id<'chats'> | undefined,
@@ -214,7 +226,11 @@ export function ChatInput({
   }, [debouncedInput, chatId]);
 
   const { userKeys } = useAppContext();
-  const showAlert = !userKeys.openai && !userKeys.openrouter && leftAlert.show;
+  const showAlert =
+    !userKeys.openai &&
+    !userKeys.openrouter &&
+    leftAlert.show &&
+    typeof leftAlert.count === 'number';
 
   return (
     <>
